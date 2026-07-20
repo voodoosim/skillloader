@@ -70,24 +70,50 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 - [x] GitHub 소유자와 공개 Go 모듈 경로를 결정한다.
 - [x] 라이선스를 결정하고 저장소에 추가한다.
 - [x] Go 버전과 `GOPATH == GOROOT` 경고 처리 방침을 결정한다.
-- [ ] 기존 코드의 파일별 재사용·재작성·폐기 판단표를 작성한다.
+- [x] 기존 코드의 파일별 재사용·재작성·폐기 판단표를 작성한다.
 - [x] MCP SDK 버전과 선택 근거를 기록한다.
 - [x] 새 프로젝트 기준 커밋을 만들고 `main`을 깨끗하게 유지한다.
+
+#### 코드 자산 감사표
+
+Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)와
+그 주변 유틸리티를 기준으로 판정.
+
+| 파일 | 판정 | 근거 |
+|---|---|---|
+| `search.go` | 재작성 | Python의 `skill_search` 로직을 8레이어 파이프라인 + dedup·safety filter로 재구현. 평가 가중치와 토큰 규칙은 Go 전용으로 재정의 |
+| `catalog.go` | 재작성 | Python의 `candidate_skill_paths`, `read_skill_metadata`, `validate_tag_index`를 Go 모듈화. `os.OpenRoot` 기반 샌드박스 탐색으로 전환, YAML 파서는 yaml.v3 도입 |
+| `loader.go` | 재작성 | Python의 `load_skill_content`, `resolve_skill_path` → Go `readTrustedFile` (3계층 containment: Rel→EvalSymlinks→OpenRoot). 경로 탈출 방어 추가 |
+| `cache.go` | 재작성 | Python의 `_skill_data_cache`, `_index_cache` → Go `Cache` (caller-provided checksum으로 I/O 제거). `StoreIndex`는 입력 복사본 보존 |
+| `doctor.go` | 재작성 | Python `candidate_skill_paths` 결과와 Claude CLI `skill-loader list` 출력을 Go 구조체 + JSON으로 통합 |
+| `main.go` | 신규 | Go MCP SDK 기반 `NewServer`, `search_skills`/`load_skill` 툴, CLI 분기. Python에는 대응물 없음 |
+| `snapshot.go` | 신규 | gob 직렬화 + 4계층 무효화 (roots hash → dir fingerprint → 개별 mtime → per-file checksum). Python에 없음 |
+| `mcp_test.go` | 신규 | `mcp.NewInMemoryTransports` 기반 풀 MCP 계약 통합 테스트 |
+| `stdio_test.go` | 신규 | 실제 `os/exec` 서브프로세스 MCP stdio 라운드트립 |
+| `integration_test.go` | 신규 | `search→load→verify` Codex 패턴 통합 테스트 |
+| `parity_test.go` | 신규 | frozen Python fixture 대조 (10/10 catalog, 10/10 load, 10/10 search) |
+| `bench_test.go` | 신규 | cold/warm 반복 가능 기준 벤치마크 |
+| `search_test.go` | 신규 | 8레이어 개별 레이어 + 직렬화 + 한국어 토큰 테스트 |
+| `loader_test.go` | 신규 | 로드, 누락, 중복, 경로 탈출, 캐시 무효화 테스트 |
+
+**총 14개 파일**: 재작성 5 (Python 로직 재구현), 신규 9 (MCP·테스트·스냅샷). 폐기 없음.
 
 종료 증거: 결정 기록, 코드 자산 감사표, 깨끗한 기준 커밋.
 
 ### Gate 1 — 계약과 테스트 자료
 
-- [ ] `search_skills` 입력·출력·오류 스키마를 확정한다.
-- [ ] `load_skill` 입력·출력·오류 스키마를 확정한다.
-- [ ] `catalog_revision` 계산과 변경 규칙을 확정한다.
-- [ ] 신뢰 루트와 논리 이름 해석 규칙을 확정한다.
-- [ ] 정상, 무관 검색, 중복 이름, 루트 이탈, 심볼릭 링크 이탈,
+- [x] `search_skills` 입력·출력·오류 스키마를 확정한다.
+- [x] `load_skill` 입력·출력·오류 스키마를 확정한다.
+- [x] `catalog_revision` 계산과 변경 규칙을 확정한다.
+- [x] 신뢰 루트와 논리 이름 해석 규칙을 확정한다.
+- [x] 정상, 무관 검색, 중복 이름, 루트 이탈, 심볼릭 링크 이탈,
   파일 변경·삭제를 포함한 로컬 테스트 fixture를 만든다.
-- [ ] Python 기준 구현을 사용할 경우 고정 fixture와 비교 명령을 기록한다.
-- [ ] 실제 카탈로그 수는 fixture가 고정되기 전까지 목표 수치로 단정하지 않는다.
+- [x] Python 기준 구현을 사용할 경우 고정 fixture와 비교 명령을 기록한다.
+- [x] 실제 카탈로그 수는 fixture가 고정되기 전까지 목표 수치로 단정하지 않는다.
 
 종료 증거: 스키마 문서와 실패하는 인수 테스트가 함께 존재한다.
+
+**현재 증거**: `docs/MCP_CONTRACT.md` (입출력·오류 스키마, `catalog_revision`, 신뢰 루트·논리 이름 해석 규칙), `mcp_test.go` (프로토콜 검증), `search_test.go`·`loader_test.go`·`parity_test.go` (정상·중복·탈출·변경·무관 검색·Python parity), `snapshot_test.go` (파일 변경·삭제)
 
 ### Gate 2 — 안전한 카탈로그 코어
 
@@ -189,7 +215,7 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 | 라이선스 | Gate 0 | MIT |
 | Go 버전과 환경 | Gate 0 | `go 1.26.5`; 동일 버전의 암묵적 toolchain과 `GOTOOLCHAIN=auto` 사용 |
 | MCP SDK | Gate 0 | 공식 Go SDK `v1.6.1`; 알려진 `v1.2.0` 경보 제거 |
-| 기존 Go 코드 재사용 범위 | Gate 0 | 감사 필요 |
+| 기존 Go 코드 재사용 범위 | Gate 0 | 감사 완료: 14개 파일 중 재작성 5, 신규 9 (Gate 0 감사표 참고) |
 | 카탈로그 root 설정 형식 | Gate 1 | 쉼표 구분 literal path; 상대경로는 cwd 기준 |
 | 검색 최대 결과 수 | Gate 1 | 요청 1~10, 범위 밖·생략 시 5 |
 | tags 없는 스킬 | Gate 1 | 허용하되 doctor warning |
