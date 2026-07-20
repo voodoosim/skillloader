@@ -26,10 +26,7 @@ func runServer() error {
 	roots := getRoots()
 
 	cache := NewCache()
-	index, errs, err := BuildIndex(roots)
-	if err != nil {
-		return fmt.Errorf("catalog build failed")
-	}
+	index, errs := tryLoadIndex(roots)
 	if len(errs) > 0 {
 		for _, e := range errs {
 			log.Printf("catalog warning: %s", e)
@@ -38,7 +35,7 @@ func runServer() error {
 	cache.StoreIndex(index)
 
 	server := newServer(index, roots, cache)
-	log.Printf("SkillLoader MCP server starting (roots: %d)", len(roots))
+	log.Printf("SkillLoader MCP server starting (roots: %d, skills: %d)", len(roots), len(index))
 	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		return fmt.Errorf("server stopped: %w", err)
 	}
