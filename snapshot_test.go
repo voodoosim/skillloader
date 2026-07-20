@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +8,7 @@ import (
 	"time"
 )
 
-func makeTestEntries(t *testing.T, dir string, count int) []SkillEntry {
+func makeSnapshotTestEntries(t *testing.T, dir string, count int) []SkillEntry {
 	t.Helper()
 	entries := make([]SkillEntry, 0, count)
 	for i := 0; i < count; i++ {
@@ -24,24 +23,34 @@ func makeTestEntries(t *testing.T, dir string, count int) []SkillEntry {
 			Tags:        []string{"test"},
 			Source:      "test",
 			Path:        path,
-			Checksum:    fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+			Checksum:    fmt.Sprintf("%x", sumContent(content)),
 		})
 	}
 	return entries
+}
+
+func sumContent(s string) [32]byte {
+	h := [32]byte{}
+	copy(h[:], []byte(s))
+	return h
 }
 
 func TestSaveAndLoadSnapshot(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 3)
-	if err := saveSnapshot(entries); err != nil {
+	entries := makeSnapshotTestEntries(t, tmp, 3)
+	roots := []string{tmp}
+	if err := saveSnapshot(entries, nil, roots); err != nil {
 		t.Fatalf("save: %v", err)
 	}
 
-	loaded, ok := loadSnapshot()
+	loaded, errs, ok := loadSnapshot(roots)
 	if !ok {
 		t.Fatal("load returned false")
+	}
+	if len(errs) > 0 {
+		t.Errorf("unexpected errors: %v", errs)
 	}
 	if len(loaded) != 3 {
 		t.Fatalf("expected 3 entries, got %d", len(loaded))
@@ -53,21 +62,56 @@ func TestSaveAndLoadSnapshot(t *testing.T) {
 	}
 }
 
+func TestSnapshotInvalidatesOnRootsChange(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", tmp)
+
+	entries := makeSnapshotTestEntries(t, tmp, 3)
+	saveSnapshot(entries, nil, []string{tmp})
+
+	otherRoot := filepath.Join(tmp, "other")
+	os.MkdirAll(otherRoot, 0755)
+	_, _, ok := loadSnapshot([]string{otherRoot})
+	if ok {
+		t.Fatal("snapshot should be invalid when roots change")
+	}
+}
+
+func TestSnapshotInvalidatesOnNewFile(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", tmp)
+
+	entries := makeSnapshotTestEntries(t, tmp, 2)
+	roots := []string{tmp}
+	saveSnapshot(entries, nil, roots)
+
+	newDir := filepath.Join(tmp, "new-skill")
+	os.MkdirAll(newDir, 0755)
+	os.WriteFile(filepath.Join(newDir, "SKILL.md"),
+		[]byte("---\nname: new-skill\ndescription: new\ntags: [new]\n---\n# Body\n"), 0644)
+
+	_, _, ok := loadSnapshot(roots)
+	if ok {
+		t.Fatal("snapshot should be invalid when new SKILL.md added")
+	}
+}
+
 func TestSnapshotInvalidatesOnFileChange(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 2)
-	if err := saveSnapshot(entries); err != nil {
+	entries := makeSnapshotTestEntries(t, tmp, 2)
+	roots := []string{tmp}
+	if err := saveSnapshot(entries, nil, roots); err != nil {
 		t.Fatalf("save: %v", err)
 	}
 
-	time.Sleep(10 * time.Millisecond)
-	os.WriteFile(entries[0].Path, []byte("modified"), 0644)
+	future := time.Now().Add(time.Hour)
+	os.Chtimes(entries[0].Path, future, future)
 
-	_, ok := loadSnapshot()
+	_, _, ok := loadSnapshot(roots)
 	if ok {
-		t.Fatal("snapshot should be invalid after file modification")
+		t.Fatal("snapshot should be invalid after mtime change")
 	}
 }
 
@@ -75,17 +119,39 @@ func TestSnapshotInvalidatesOnFileRemoval(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 2)
-	if err := saveSnapshot(entries); err != nil {
+	entries := makeSnapshotTestEntries(t, tmp, 2)
+	roots := []string{tmp}
+	if err := saveSnapshot(entries, nil, roots); err != nil {
 		t.Fatalf("save: %v", err)
 	}
 
 	os.Remove(entries[0].Path)
-	os.RemoveAll(filepath.Dir(entries[0].Path))
 
-	_, ok := loadSnapshot()
+	_, _, ok := loadSnapshot(roots)
 	if ok {
 		t.Fatal("snapshot should be invalid after file removal")
+	}
+}
+
+func TestSnapshotPreservesErrors(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", tmp)
+
+	entries := makeSnapshotTestEntries(t, tmp, 1)
+	roots := []string{tmp}
+	fakeErrs := []string{"warn: something", "err: missing tags"}
+
+	saveSnapshot(entries, fakeErrs, roots)
+
+	_, errs, ok := loadSnapshot(roots)
+	if !ok {
+		t.Fatal("load returned false")
+	}
+	if len(errs) != 2 {
+		t.Fatalf("expected 2 errors, got %d: %v", len(errs), errs)
+	}
+	if errs[0] != "warn: something" {
+		t.Errorf("errs[0] = %q", errs[0])
 	}
 }
 
@@ -93,7 +159,7 @@ func TestSnapshotLoadMissingFile(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	_, ok := loadSnapshot()
+	_, _, ok := loadSnapshot([]string{tmp})
 	if ok {
 		t.Fatal("load should return false for missing snapshot")
 	}
@@ -103,14 +169,15 @@ func TestClearSnapshot(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 1)
-	saveSnapshot(entries)
+	entries := makeSnapshotTestEntries(t, tmp, 1)
+	roots := []string{tmp}
+	saveSnapshot(entries, nil, roots)
 
 	if err := clearSnapshot(); err != nil {
 		t.Fatalf("clear: %v", err)
 	}
 
-	_, ok := loadSnapshot()
+	_, _, ok := loadSnapshot(roots)
 	if ok {
 		t.Fatal("snapshot should be gone after clear")
 	}
@@ -120,10 +187,10 @@ func TestTryLoadIndexWithSnapshot(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 5)
-	saveSnapshot(entries)
-
+	entries := makeSnapshotTestEntries(t, tmp, 5)
 	roots := []string{tmp}
+	saveSnapshot(entries, nil, roots)
+
 	loaded, errs := tryLoadIndex(roots)
 	if len(errs) > 0 {
 		t.Fatalf("unexpected errors: %v", errs)
@@ -137,7 +204,7 @@ func TestTryLoadIndexFallbackToBuild(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)
 
-	entries := makeTestEntries(t, tmp, 3)
+	entries := makeSnapshotTestEntries(t, tmp, 3)
 
 	roots := []string{tmp}
 	loaded, errs := tryLoadIndex(roots)

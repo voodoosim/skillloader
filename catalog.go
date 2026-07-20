@@ -137,8 +137,8 @@ func BuildIndex(roots []string) ([]SkillEntry, []string, error) {
 }
 
 func tryLoadIndex(roots []string) ([]SkillEntry, []string) {
-	if entries, ok := loadSnapshot(); ok {
-		return entries, nil
+	if entries, errs, ok := loadSnapshot(roots); ok {
+		return entries, errs
 	}
 
 	entries, errs, err := BuildIndex(roots)
@@ -146,7 +146,7 @@ func tryLoadIndex(roots []string) ([]SkillEntry, []string) {
 		return nil, []string{err.Error()}
 	}
 
-	_ = saveSnapshot(entries)
+	_ = saveSnapshot(entries, errs, roots)
 	return entries, errs
 }
 
