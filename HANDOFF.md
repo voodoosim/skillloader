@@ -10,7 +10,7 @@ remaining gates belong in `plan.md` and `CODEX_PLAN_BASELINE.md`.
 | Surface | State | Evidence |
 |---|---|---|
 | Project root | `/home/vodo/workspace/projects/skillloader` | `git rev-parse --show-toplevel` |
-| Git | Branch `main`, latest snapshot fix `2cc21b5`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
+| Git | Branch `main`, latest snapshot fix `86e303e`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
 | Runtime | Project-selected Go `1.26.5` on `linux/amd64`; `go 1.26.5` also implies the same preferred toolchain | `go.mod`, `GODEBUG=toolchaintrace=1 go version` |
 | Go environment | `GOTOOLCHAIN=auto` selects the module toolchain under the module cache; project commands no longer use the host's overlapping `GOPATH`/`GOROOT` | `go env GOVERSION GOTOOLCHAIN GOROOT GOPATH` |
 | Implementation | Local Go prototype with catalog, YAML frontmatter parsing, search, duplicate-name rejection, trusted-root load, cache, two typed MCP tools, and operator CLI | source tree and tests |
@@ -63,7 +63,7 @@ diagnostic. `skill_count`,
 go mod tidy                                pass
 go mod verify                              pass
 gofmt -d *.go                              clean
-go test -count=1 ./...                     pass (56 tests)
+go test -count=1 ./...                     pass (77 tests)
 go test -race -count=1 ./...               pass
 go vet ./...                               pass
 go build ./...                             pass
