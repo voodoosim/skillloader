@@ -130,6 +130,32 @@ The recorded result is `bench/results/2026-07-20-go1.26.5-fixture100.json`.
 It is core-process timing only: it does not measure MCP transport overhead,
 Codex client behavior, token counts, or a real user catalog.
 
+### Currently recorded evidence (2026-07-20, Go 1.26.5, fixture-100)
+
+| Mode | Operation | p50 | p95 | Mean |
+|------|-----------|-----|-----|------|
+| Cold | search    | 4.47ms | 5.49ms | 4.52ms |
+| Cold | load      | 34.7µs | 72.9µs | 42.1µs |
+| Warm | search    | 29.3µs | 52.9µs | 36.1µs |
+| Warm | load      | 19.0µs | 32.3µs | 28.9µs |
+
+The internal Go `testing.B` benchmarks (`BenchmarkColdBuild`, `BenchmarkWarmSnapshot`)
+measure catalog-index build and snapshot-load over a 50-skill catalog:
+
+```bash
+go test -bench=Snapshot -benchmem -count=5
+```
+
+These exclude disk I/O by resetting the timer, and exclude binary-startup
+overhead. For binary-level cold-start and warm-start, smoke-test the built
+binary outside the repository:
+
+```bash
+go build -o /tmp/skillloader .
+/tmp/skillloader doctor --json    # cold start: catalog build + parse
+/tmp/skillloader doctor --json    # warm start: snapshot cache hit
+```
+
 ## Acceptance rule
 
 The README may publish a numerical skill-catalog overhead claim only after a

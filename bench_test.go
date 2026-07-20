@@ -1,3 +1,16 @@
+// Benchmark conditions:
+//
+//	System:      linux/amd64, Go 1.26.5, AMD Ryzen (WSL)
+//	Catalog:     50 synthetic SKILL.md files under a temporary directory
+//	Measurement: Go testing.B (BenchmarkColdBuild, BenchmarkWarmSnapshot)
+//	I/O:         disk I/O excluded; cold benchmark resets timer after BuildIndex
+//	             warm benchmark pre-saves snapshot and resets timer before load
+//	Scope:       core-process timing; does not measure Go binary startup overhead,
+//	             MCP transport, Codex client behavior, or a real user catalog
+//
+// For I/O-including benchmark evidence across search + load + 100-skill catalog,
+// see benchmark_evidence_test.go and bench/results/.
+
 package main
 
 import (
