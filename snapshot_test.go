@@ -155,6 +155,41 @@ func TestSnapshotPreservesErrors(t *testing.T) {
 	}
 }
 
+func TestSnapshotInvalidatesWhenInvalidFileBecomesValid(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(tmp, "cache"))
+	root := filepath.Join(tmp, "root")
+	dir := filepath.Join(root, "changing")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "SKILL.md")
+	if err := os.WriteFile(path, []byte("not frontmatter\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries, errs, err := BuildIndex([]string{root})
+	if err != nil || len(entries) != 0 || len(errs) == 0 {
+		t.Fatalf("initial index entries=%d errors=%v err=%v", len(entries), errs, err)
+	}
+	if err := saveSnapshot(entries, errs, []string{root}); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid := "---\nname: changing\ndescription: now valid\ntags: [test]\n---\n# Valid\n"
+	if err := os.WriteFile(path, []byte(valid), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(path, info.ModTime(), info.ModTime()); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := loadSnapshot([]string{root}); ok {
+		t.Fatal("snapshot should invalidate when an invalid file becomes valid")
+	}
+}
+
 func TestSnapshotLoadMissingFile(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)

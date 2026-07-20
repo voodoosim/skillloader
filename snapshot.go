@@ -21,6 +21,7 @@ const cacheDirName = "skillloader"
 type catalogSnapshot struct {
 	Entries         []SkillEntry
 	FileTimes       map[string]time.Time
+	FileChecksums   map[string]string
 	NormalizedRoots []string
 	RootsHash       string
 	DirFingerprint  string
@@ -73,16 +74,20 @@ func loadSnapshot(roots []string) ([]SkillEntry, []string, bool) {
 		return nil, nil, false
 	}
 
-	for _, entry := range snap.Entries {
-		info, err := os.Stat(entry.Path)
+	currentPaths, err := DiscoverSkills(roots)
+	if err != nil || len(currentPaths) != len(snap.FileTimes) {
+		return nil, nil, false
+	}
+	for _, path := range currentPaths {
+		info, err := os.Stat(path)
 		if err != nil {
 			return nil, nil, false
 		}
-		stored, ok := snap.FileTimes[entry.Path]
+		stored, ok := snap.FileTimes[path]
 		if !ok || !info.ModTime().Equal(stored) {
 			return nil, nil, false
 		}
-		if fileChecksum(entry.Path) != entry.Checksum {
+		if fileChecksum(roots, path) != snap.FileChecksums[path] {
 			return nil, nil, false
 		}
 	}
@@ -108,6 +113,7 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 	snap := catalogSnapshot{
 		Entries:         copyEntries(entries),
 		FileTimes:       make(map[string]time.Time, len(entries)),
+		FileChecksums:   make(map[string]string),
 		NormalizedRoots: r,
 		RootsHash:       hashRoots(r),
 		DirFingerprint:  fp,
@@ -116,22 +122,39 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 	}
 	copy(snap.Errors, errs)
 
-	for _, entry := range entries {
-		info, err := os.Stat(entry.Path)
-		if err != nil {
-			continue
-		}
-		snap.FileTimes[entry.Path] = info.ModTime()
-	}
-
-	f, err := os.Create(path)
+	paths, err := DiscoverSkills(roots)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		snap.FileTimes[path] = info.ModTime()
+		snap.FileChecksums[path] = fileChecksum(roots, path)
+	}
 
-	if err := gob.NewEncoder(f).Encode(snap); err != nil {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".catalog.gob-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	if err := gob.NewEncoder(tmp).Encode(snap); err != nil {
+		_ = tmp.Close()
 		return fmt.Errorf("encode snapshot: %w", err)
+	}
+	if err := tmp.Sync(); err != nil {
+		_ = tmp.Close()
+		return fmt.Errorf("sync snapshot: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("close snapshot: %w", err)
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		return fmt.Errorf("replace snapshot: %w", err)
 	}
 
 	return nil
@@ -149,7 +172,11 @@ func normalizeRoots(roots []string) []string {
 	out := make([]string, len(roots))
 	for i, r := range roots {
 		abs, _ := filepath.Abs(r)
-		resolved, _ := filepath.EvalSymlinks(abs)
+		resolved, err := filepath.EvalSymlinks(abs)
+		if err != nil {
+			out[i] = abs
+			continue
+		}
 		out[i] = resolved
 	}
 	sort.Strings(out)
@@ -186,7 +213,7 @@ func entryWithinRoots(normalizedRoots []string, path string) bool {
 	}
 	for _, root := range normalizedRoots {
 		rel, err := filepath.Rel(root, resolvedPath)
-		if err == nil && rel != "." && !filepath.IsAbs(rel) && !strings.HasPrefix(rel, "..") {
+		if err == nil && rel != "." && !filepath.IsAbs(rel) && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 			return true
 		}
 	}
@@ -199,8 +226,8 @@ func copyEntries(src []SkillEntry) []SkillEntry {
 	return out
 }
 
-func fileChecksum(path string) string {
-	data, err := os.ReadFile(path)
+func fileChecksum(roots []string, path string) string {
+	data, err := readTrustedFile(roots, path)
 	if err != nil {
 		return ""
 	}
