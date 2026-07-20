@@ -166,18 +166,18 @@ func TestSearchSerialization(t *testing.T) {
 	}
 }
 
-func TestDedupRemovesDuplicates(t *testing.T) {
+func TestSearchRejectsAmbiguousNames(t *testing.T) {
 	entries := []scoredEntry{
 		{entry: SkillEntry{Name: "alpha", Source: "codex"}, score: 80},
 		{entry: SkillEntry{Name: "alpha", Source: "claude"}, score: 60},
 		{entry: SkillEntry{Name: "beta", Source: "codex"}, score: 50},
 	}
-	result := layerDedup(entries)
-	if len(result) != 2 {
-		t.Fatalf("expected 2 after dedup, got %d", len(result))
+	result := layerRejectAmbiguous(entries)
+	if len(result) != 1 {
+		t.Fatalf("expected only the unambiguous result, got %d", len(result))
 	}
-	if result[0].score != 80 {
-		t.Errorf("dedup kept lower score for alpha: %d", result[0].score)
+	if result[0].entry.Name != "beta" {
+		t.Fatalf("result name = %q, want beta", result[0].entry.Name)
 	}
 }
 

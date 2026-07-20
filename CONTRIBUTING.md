@@ -44,6 +44,17 @@ go build ./...
 go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 ```
 
+For every newly selected indirect module, also record its actual import path
+and why it is needed:
+
+```bash
+go mod why -m <module-path>
+go mod graph
+```
+
+Keep the results and the known-vulnerability boundary in
+`docs/DEPENDENCY_REVIEW.md`.
+
 Do not document a command as working until it has been executed successfully in
 the current tree.
 

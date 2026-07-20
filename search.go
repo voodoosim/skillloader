@@ -63,8 +63,8 @@ func (e *SearchEngine) Search(query string, limit int) []SearchMatch {
 		return scored[i].entry.Name < scored[j].entry.Name
 	})
 
-	// Layer 6: Deduplicate by logical name (keep highest score).
-	scored = layerDedup(scored)
+	// Layer 6: Reject ambiguous logical names instead of selecting a source.
+	scored = layerRejectAmbiguous(scored)
 
 	// Layer 7: Safety filter — remove entries with invalid metadata.
 	scored = layerSafetyFilter(scored)
@@ -199,21 +199,20 @@ func layerAggregate(index []SkillEntry, tagScores, nameScores, descScores []int)
 }
 
 // ---------------------------------------------------------------------------
-// Layer 6: Deduplication
+// Layer 6: Ambiguity rejection
 // ---------------------------------------------------------------------------
 
-func layerDedup(scored []scoredEntry) []scoredEntry {
-	seen := make(map[string]int) // name -> index of best
+func layerRejectAmbiguous(scored []scoredEntry) []scoredEntry {
+	counts := make(map[string]int, len(scored))
+	for _, s := range scored {
+		counts[s.entry.Name]++
+	}
+
 	out := make([]scoredEntry, 0, len(scored))
 	for _, s := range scored {
-		if idx, ok := seen[s.entry.Name]; ok {
-			if s.score > out[idx].score {
-				out[idx] = s
-			}
-			continue
+		if counts[s.entry.Name] == 1 {
+			out = append(out, s)
 		}
-		seen[s.entry.Name] = len(out)
-		out = append(out, s)
 	}
 	return out
 }

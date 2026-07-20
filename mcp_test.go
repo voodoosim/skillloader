@@ -134,6 +134,72 @@ func TestMCPToolsExposeStructuredResultsAndRedactedErrors(t *testing.T) {
 	}
 }
 
+func TestMCPRejectsAmbiguousSkillName(t *testing.T) {
+	index := []SkillEntry{
+		{Name: "dupe", Source: "codex", Path: "/private/codex/SKILL.md"},
+		{Name: "dupe", Source: "claude", Path: "/private/claude/SKILL.md"},
+	}
+	cache := NewCache()
+	cache.StoreIndex(index)
+
+	ctx := context.Background()
+	clientTransport, serverTransport := mcp.NewInMemoryTransports()
+	serverSession, err := newServer(index, nil, cache).Connect(ctx, serverTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer serverSession.Close()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "0.0.1"}, nil)
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clientSession.Close()
+
+	searchResult, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "search_skills",
+		Arguments: map[string]any{"query": "dupe"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if searchResult.IsError || searchResult.StructuredContent == nil {
+		t.Fatalf("ambiguous search result = %#v", searchResult)
+	}
+	var searchOutput SearchOutput
+	decodeStructured(t, searchResult.StructuredContent, &searchOutput)
+	if len(searchOutput.Matches) != 0 {
+		t.Fatalf("ambiguous name was exposed by search: %#v", searchOutput.Matches)
+	}
+
+	result, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "load_skill",
+		Arguments: map[string]any{"name": "dupe"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError || result.StructuredContent == nil {
+		t.Fatalf("ambiguous load result = %#v", result)
+	}
+
+	var output LoadOutput
+	decodeStructured(t, result.StructuredContent, &output)
+	if output.Error == nil || output.Error.Code != "AMBIGUOUS_SKILL" {
+		t.Fatalf("ambiguous load output = %#v", output)
+	}
+	encoded, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, sensitive := range []string{"/private/codex", "/private/claude", "codex", "claude"} {
+		if strings.Contains(string(encoded), sensitive) {
+			t.Fatalf("ambiguous MCP error leaked source detail %q: %s", sensitive, encoded)
+		}
+	}
+}
+
 func decodeStructured(t *testing.T, value any, target any) {
 	t.Helper()
 	data, err := json.Marshal(value)
