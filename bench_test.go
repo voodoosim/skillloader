@@ -14,7 +14,7 @@ func BenchmarkColdBuild(b *testing.B) {
 	for i := 0; i < 50; i++ {
 		dir := filepath.Join(tmp, fmt.Sprintf("skill-%d", i))
 		os.MkdirAll(dir, 0755)
-		content := []byte("---\nname: bench-cold-" + string(rune('a'+i%26)) + "\ndescription: bench\ntags: [bench]\n---\n# Body\n")
+		content := []byte(fmt.Sprintf("---\nname: bench-cold-%d\ndescription: bench\ntags: [bench]\n---\n# Body\n", i))
 		os.WriteFile(filepath.Join(dir, "SKILL.md"), content, 0644)
 	}
 
@@ -33,7 +33,7 @@ func BenchmarkWarmSnapshot(b *testing.B) {
 	for i := 0; i < 50; i++ {
 		dir := filepath.Join(tmp, fmt.Sprintf("skill-%d", i))
 		os.MkdirAll(dir, 0755)
-		content := []byte("---\nname: bench-warm-" + string(rune('a'+i%26)) + "\ndescription: bench\ntags: [bench]\n---\n# Body\n")
+		content := []byte(fmt.Sprintf("---\nname: bench-warm-%d\ndescription: bench\ntags: [bench]\n---\n# Body\n", i))
 		os.WriteFile(filepath.Join(dir, "SKILL.md"), content, 0644)
 	}
 

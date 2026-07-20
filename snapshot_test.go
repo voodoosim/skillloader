@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,16 +24,15 @@ func makeSnapshotTestEntries(t *testing.T, dir string, count int) []SkillEntry {
 			Tags:        []string{"test"},
 			Source:      "test",
 			Path:        path,
-			Checksum:    fmt.Sprintf("%x", sumContent(content)),
+			Checksum:    sumContent(content),
 		})
 	}
 	return entries
 }
 
-func sumContent(s string) [32]byte {
-	h := [32]byte{}
-	copy(h[:], []byte(s))
-	return h
+func sumContent(s string) string {
+	h := sha256.Sum256([]byte(s))
+	return fmt.Sprintf("%x", h[:])
 }
 
 func TestSaveAndLoadSnapshot(t *testing.T) {

@@ -82,6 +82,9 @@ func loadSnapshot(roots []string) ([]SkillEntry, []string, bool) {
 		if !ok || !info.ModTime().Equal(stored) {
 			return nil, nil, false
 		}
+		if fileChecksum(entry.Path) != entry.Checksum {
+			return nil, nil, false
+		}
 	}
 
 	out := copyEntries(snap.Entries)
@@ -146,7 +149,8 @@ func normalizeRoots(roots []string) []string {
 	out := make([]string, len(roots))
 	for i, r := range roots {
 		abs, _ := filepath.Abs(r)
-		out[i] = abs
+		resolved, _ := filepath.EvalSymlinks(abs)
+		out[i] = resolved
 	}
 	sort.Strings(out)
 	return out
@@ -176,8 +180,12 @@ func entryWithinRoots(normalizedRoots []string, path string) bool {
 	if err != nil {
 		return false
 	}
+	resolvedPath, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		return false
+	}
 	for _, root := range normalizedRoots {
-		rel, err := filepath.Rel(root, absPath)
+		rel, err := filepath.Rel(root, resolvedPath)
 		if err == nil && rel != "." && !filepath.IsAbs(rel) && !strings.HasPrefix(rel, "..") {
 			return true
 		}
@@ -189,4 +197,13 @@ func copyEntries(src []SkillEntry) []SkillEntry {
 	out := make([]SkillEntry, len(src))
 	copy(out, src)
 	return out
+}
+
+func fileChecksum(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	h := sha256.Sum256(data)
+	return fmt.Sprintf("%x", h[:])
 }
