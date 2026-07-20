@@ -148,13 +148,11 @@ BenchmarkSnapshotWarm-4 21655  55477 ns/op   620 B/op  10 allocs/op
 
 ## 4. Known Issues (after fix)
 
-### M2 — Snapshot checksum reads every file (DEFERRED, not fixed)
-`snapshot.go:130-137`: On warm hit, `loadSnapshot` verifies mtime against every file via `stat()` calls but does not re-read content. This is O(n) syscalls but prevents stale snapshots.  
+### M2 — Snapshot checksum reads every file (DEFERRED optimization)
+`snapshot.go` re-reads and hashes every discovered file on warm validation. This preserves correctness when content changes without an mtime change, but makes warm validation O(n) in file bytes. Keep checksum validation until a safe metadata strategy is demonstrated by benchmark.
 
-**Risk**: Low. 133 files × stat() ≈ negligible on modern SSD. Deferred until benchmark shows regression with larger catalogs.
-
-### L1 — HANDOFF.md HEAD reference stale
-`HANDOFF.md` line 1 states "HEAD at 2cc21b5" but actual HEAD is `86e303e`. Non-blocking, documentation hygiene.
+### L1 — HANDOFF.md HEAD reference (resolved)
+The handoff now records the current report commit `0262c79`; future commits must update this observed-state line.
 
 ---
 
@@ -171,7 +169,7 @@ BenchmarkSnapshotWarm-4 21655  55477 ns/op   620 B/op  10 allocs/op
 
 ## 6. Final Assessment
 
-**Verdict: MERGE SAFE — PRODUCTION READY**
+**Verdict: MERGE SAFE — live-client validation and Layer 4 policy decision remain pending**
 
 Strengths:
 - All security-critical bugs from cross-review resolved
