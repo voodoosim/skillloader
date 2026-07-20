@@ -79,9 +79,12 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 				Error:           skillError("INVALID_ARGUMENT", "A non-empty search query is required."),
 			}, nil
 		}
-		limit := input.Limit
-		if limit <= 0 || limit > 10 {
-			limit = 5
+		limit := 5
+		if input.Limit != nil {
+			limit = *input.Limit
+			if limit <= 0 || limit > 10 {
+				limit = 5
+			}
 		}
 
 		results := engine.Search(input.Query, limit)
@@ -177,7 +180,7 @@ func printUsage(w io.Writer) {
 
 type SearchInput struct {
 	Query string `json:"query" jsonschema:"required, the task description to search for matching skills"`
-	Limit int    `json:"limit" jsonschema:"maximum results (1-10, default 5)"`
+	Limit *int   `json:"limit,omitempty" jsonschema:"maximum results (1-10, default 5)"`
 }
 
 type LoadInput struct {

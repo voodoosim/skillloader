@@ -67,18 +67,28 @@ func TestLoaderNotFound(t *testing.T) {
 	}
 }
 
-func TestLoaderAmbiguousName(t *testing.T) {
+func TestLoaderDuplicatesResolved(t *testing.T) {
 	index := []SkillEntry{
-		{Name: "dupe", Source: "codex", Path: "/a/SKILL.md"},
 		{Name: "dupe", Source: "claude", Path: "/b/SKILL.md"},
+		{Name: "dupe", Source: "codex", Path: "/a/SKILL.md"},
 	}
-	loader := NewSkillLoader(index, nil, NewCache())
-	_, err := loader.Load("dupe")
-	if err == nil {
-		t.Fatal("expected error for ambiguous name")
+	result := resolveCandidate(index)
+	if result.Source != "codex" {
+		t.Errorf("expected higher-priority codex, got %s", result.Source)
 	}
-	if !strings.Contains(err.Error(), "AMBIGUOUS_SKILL") {
-		t.Errorf("error should say AMBIGUOUS_SKILL, got: %v", err)
+	if result.Path != "/a/SKILL.md" {
+		t.Errorf("expected /a/SKILL.md, got %s", result.Path)
+	}
+}
+
+func TestLoaderResolveSamePriority(t *testing.T) {
+	index := []SkillEntry{
+		{Name: "dupe", Source: "codex", Path: "/zzz/SKILL.md"},
+		{Name: "dupe", Source: "codex", Path: "/aaa/SKILL.md"},
+	}
+	result := resolveCandidate(index)
+	if result.Path != "/aaa/SKILL.md" {
+		t.Errorf("expected lexical tiebreaker /aaa, got %s", result.Path)
 	}
 }
 

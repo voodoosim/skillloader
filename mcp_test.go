@@ -78,6 +78,22 @@ func TestMCPToolsExposeStructuredResultsAndRedactedErrors(t *testing.T) {
 		t.Fatalf("search text compatibility content = %#v", searchResult.Content)
 	}
 
+	searchWithoutLimit, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name:      "search_skills",
+		Arguments: map[string]any{"query": "MCP integration"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if searchWithoutLimit.IsError {
+		t.Fatalf("search without limit should succeed, got: %#v", searchWithoutLimit)
+	}
+	var searchNoLimitOutput SearchOutput
+	decodeStructured(t, searchWithoutLimit.StructuredContent, &searchNoLimitOutput)
+	if searchNoLimitOutput.Limit != 5 {
+		t.Fatalf("default limit = %d, want 5", searchNoLimitOutput.Limit)
+	}
+
 	loadSuccess, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
 		Name:      "load_skill",
 		Arguments: map[string]any{"name": "mcp-test"},

@@ -51,11 +51,8 @@ func (l *SkillLoader) Load(name string) (*LoadResult, error) {
 	if len(candidates) == 0 {
 		return nil, skillError("SKILL_NOT_FOUND", "The logical skill name was not found.")
 	}
-	if len(candidates) > 1 {
-		return nil, skillError("AMBIGUOUS_SKILL", "The logical skill name resolves to multiple trusted sources.")
-	}
 
-	entry := candidates[0]
+	entry := resolveCandidate(candidates)
 	path := entry.Path
 
 	data, err := readTrustedFile(l.roots, path)
@@ -108,4 +105,36 @@ func (l *SkillLoader) lookup(name string) []SkillEntry {
 
 func cleanName(name string) string {
 	return strings.TrimSpace(name)
+}
+
+func sourcePriority(source string) int {
+	switch source {
+	case "codex":
+		return 1
+	case "shared_agent":
+		return 2
+	case "claude":
+		return 3
+	case "disabled":
+		return 4
+	default:
+		return 5
+	}
+}
+
+func resolveCandidate(candidates []SkillEntry) SkillEntry {
+	if len(candidates) == 1 {
+		return candidates[0]
+	}
+	best := candidates[0]
+	for _, c := range candidates[1:] {
+		p1 := sourcePriority(best.Source)
+		p2 := sourcePriority(c.Source)
+		if p2 < p1 {
+			best = c
+		} else if p2 == p1 && c.Path < best.Path {
+			best = c
+		}
+	}
+	return best
 }
