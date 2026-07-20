@@ -81,7 +81,7 @@ func DoctorJSON(roots []string, c *Cache) string {
 
 // ListJSON returns the full catalog index as JSON.
 func ListJSON(roots []string) string {
-	entries, _, _ := BuildIndex(roots)
+	entries, _ := tryLoadIndex(roots)
 	type listEntry struct {
 		Name   string   `json:"name"`
 		Tags   []string `json:"tags"`
@@ -105,7 +105,7 @@ func ListJSON(roots []string) string {
 
 // ListText returns a human-readable catalog listing.
 func ListText(roots []string) string {
-	entries, _, _ := BuildIndex(roots)
+	entries, _ := tryLoadIndex(roots)
 	var sb strings.Builder
 	for _, e := range entries {
 		tags := strings.Join(e.Tags, ", ")

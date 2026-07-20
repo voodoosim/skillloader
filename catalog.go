@@ -136,6 +136,20 @@ func BuildIndex(roots []string) ([]SkillEntry, []string, error) {
 	return entries, errors, nil
 }
 
+func tryLoadIndex(roots []string) ([]SkillEntry, []string) {
+	if entries, errs, ok := loadSnapshot(roots); ok {
+		return entries, errs
+	}
+
+	entries, errs, err := BuildIndex(roots)
+	if err != nil {
+		return nil, []string{err.Error()}
+	}
+
+	_ = saveSnapshot(entries, errs, roots)
+	return entries, errs
+}
+
 func redactedCatalogError(err error) string {
 	switch {
 	case errors.Is(err, errOutsideTrustedRoots):
