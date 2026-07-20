@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "reference": {
+    "implementation": "skill_loader.py",
+    "relative_path": "skills/skill-loader/scripts/skill_loader.py",
+    "sha256": "14e608a18e119f15c7789ebc74a00e2aa3e1011fe3f95a27be3b1dadf2c1c95f"
+  },
+  "catalog": [
+    {
+      "name": "api-guardian",
+      "tags": ["api", "openapi", "security"]
+    },
+    {
+      "name": "branch-surgeon",
+      "tags": ["branch", "git", "rebase", "workflow"]
+    },
+    {
+      "name": "cache-observer",
+      "tags": ["benchmark", "cache", "latency"]
+    },
+    {
+      "name": "contract-auditor",
+      "tags": ["contract", "mcp", "schema"]
+    },
+    {
+      "name": "docker-builder",
+      "tags": ["build", "container", "docker"]
+    },
+    {
+      "name": "incident-triage",
+      "tags": ["diagnosis", "incident", "production"]
+    },
+    {
+      "name": "korean-router",
+      "tags": ["검색", "라우팅", "한글"]
+    },
+    {
+      "name": "migration-planner",
+      "tags": ["database", "migration", "sql"]
+    },
+    {
+      "name": "release-notes",
+      "tags": ["changelog", "documentation", "release"]
+    },
+    {
+      "name": "test-designer",
+      "tags": ["fixture", "regression", "testing"]
+    }
+  ],
+  "queries": [
+    {
+      "id": "api-security",
+      "query": "api security openapi review",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "api-guardian",
+          "tags": ["api", "openapi", "security"]
+        }
+      ]
+    },
+    {
+      "id": "git-workflow",
+      "query": "git branch rebase workflow",
+      "limit": 5,
+      "results": [
+        {
+          "score": 148,
+          "name": "branch-surgeon",
+          "tags": ["branch", "git", "rebase", "workflow"]
+        }
+      ]
+    },
+    {
+      "id": "cache-benchmark",
+      "query": "cache latency benchmark",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "cache-observer",
+          "tags": ["benchmark", "cache", "latency"]
+        }
+      ]
+    },
+    {
+      "id": "mcp-contract",
+      "query": "mcp schema contract",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "contract-auditor",
+          "tags": ["contract", "mcp", "schema"]
+        }
+      ]
+    },
+    {
+      "id": "container-build",
+      "query": "docker container build",
+      "limit": 5,
+      "results": [
+        {
+          "score": 136,
+          "name": "docker-builder",
+          "tags": ["build", "container", "docker"]
+        }
+      ]
+    },
+    {
+      "id": "incident-diagnosis",
+      "query": "production incident diagnosis",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "incident-triage",
+          "tags": ["diagnosis", "incident", "production"]
+        }
+      ]
+    },
+    {
+      "id": "korean-routing",
+      "query": "한글 라우팅 검색",
+      "limit": 5,
+      "results": [
+        {
+          "score": 96,
+          "name": "korean-router",
+          "tags": ["검색", "라우팅", "한글"]
+        }
+      ]
+    },
+    {
+      "id": "database-migration",
+      "query": "database sql migration",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "migration-planner",
+          "tags": ["database", "migration", "sql"]
+        }
+      ]
+    },
+    {
+      "id": "release-documentation",
+      "query": "release changelog documentation",
+      "limit": 5,
+      "results": [
+        {
+          "score": 116,
+          "name": "release-notes",
+          "tags": ["changelog", "documentation", "release"]
+        }
+      ]
+    },
+    {
+      "id": "regression-fixture",
+      "query": "testing fixture regression",
+      "limit": 5,
+      "results": [
+        {
+          "score": 96,
+          "name": "test-designer",
+          "tags": ["fixture", "regression", "testing"]
+        }
+      ]
+    }
+  ]
+}
