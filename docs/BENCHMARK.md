@@ -61,6 +61,12 @@ Use a versioned, labeled suite containing:
 Each task records the expected top match, allowed alternatives, and whether no
 load is correct.
 
+The committed task fixture is `bench/tasks/task-fixture-v1.json`. It targets the
+parity test catalog (`testdata/parity/`) and covers all required categories with
+12 tasks. Run the parity test to verify search ranking correctness against this
+catalog, then use the same tasks for eager-vs-SkillLoader comparison with a live
+client.
+
 ## Metrics
 
 ### Token metrics

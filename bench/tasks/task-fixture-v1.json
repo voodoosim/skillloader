@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "description": "Versioned task fixture for Gate 6 product evidence. Each task specifies the expected top match, allowed alternatives, whether no load is correct, and the expected client action.",
+  "catalog_ref": "testdata/parity/home/.codex/skills/",
+  "tasks": [
+    {
+      "id": "exact-name-01",
+      "query": "api guardian security check",
+      "expected_top": "api-guardian",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "exact-name"
+    },
+    {
+      "id": "exact-name-02",
+      "query": "docker builder container build",
+      "expected_top": "docker-builder",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "exact-name"
+    },
+    {
+      "id": "tag-match-01",
+      "query": "git rebase workflow branch",
+      "expected_top": "branch-surgeon",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "tag-match"
+    },
+    {
+      "id": "tag-match-02",
+      "query": "benchmark latency cache",
+      "expected_top": "cache-observer",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "tag-match"
+    },
+    {
+      "id": "synonym-match-01",
+      "query": "database sql schema migration",
+      "expected_top": "migration-planner",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "synonym-match"
+    },
+    {
+      "id": "korean-01",
+      "query": "한글 라우팅 검색",
+      "expected_top": "korean-router",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "ko",
+      "category": "korean"
+    },
+    {
+      "id": "korean-02",
+      "query": "릴리스 노트 작성해줘",
+      "expected_top": "release-notes",
+      "alternatives": [],
+      "no_load": false,
+      "load_count": 1,
+      "language": "ko",
+      "category": "korean"
+    },
+    {
+      "id": "ambiguous-01",
+      "query": "contract mcp schema audit",
+      "expected_top": "contract-auditor",
+      "alternatives": ["api-guardian"],
+      "no_load": false,
+      "load_count": 1,
+      "language": "en",
+      "category": "ambiguous"
+    },
+    {
+      "id": "no-specialist-01",
+      "query": "what is the capital of France",
+      "expected_top": null,
+      "alternatives": [],
+      "no_load": true,
+      "load_count": 0,
+      "language": "en",
+      "category": "no-specialist"
+    },
+    {
+      "id": "no-specialist-02",
+      "query": "서울 날씨 어때",
+      "expected_top": null,
+      "alternatives": [],
+      "no_load": true,
+      "load_count": 0,
+      "language": "ko",
+      "category": "no-specialist"
+    },
+    {
+      "id": "multi-skill-01",
+      "query": "test the new release and check for regressions",
+      "expected_top": "test-designer",
+      "alternatives": ["release-notes"],
+      "no_load": false,
+      "load_count": 2,
+      "language": "en",
+      "category": "multi-skill"
+    },
+    {
+      "id": "security-gate-01",
+      "query": "audit this api contract for security and build a docker image",
+      "expected_top": "api-guardian",
+      "alternatives": ["contract-auditor", "docker-builder"],
+      "no_load": false,
+      "load_count": 2,
+      "language": "en",
+      "category": "safety-gate"
+    }
+  ]
+}
