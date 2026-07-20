@@ -75,23 +75,23 @@ a recorded decision on the Go environment warning.
 
 ### Gate 1 — Core parity and safety
 
-- [ ] Initialize `go.mod` and pin the official Go MCP SDK.
+- [x] Initialize `go.mod` and pin the official Go MCP SDK.
 - [ ] Add sanitized catalog and query fixtures from the Python loader.
-- [ ] Parse and validate every skill in the frozen 82-skill catalog.
+- [~] Parse and validate every skill in the frozen 82-skill catalog.
 - [ ] Match exact-load content and metadata for all 82 frozen skills.
 - [ ] Match Python search ordering for the frozen parity query set.
-- [ ] Reject missing names, duplicate names, root escapes, and symlink escapes.
-- [ ] Prove cache hit, update, removal, and invalidation behavior with tests.
+- [x] Reject missing names, duplicate names, root escapes, and symlink escapes.
+- [x] Prove cache hit, update, removal, and invalidation behavior with tests.
 
 Exit evidence: exact test commands pass, `doctor` reports the expected frozen
 catalog counts, and no parity or path-safety case remains unresolved.
 
 ### Gate 2 — Minimal product path
 
-- [ ] Expose only `search_skills` and `load_skill` through stdio MCP.
-- [ ] Add stable structured outputs and redacted error envelopes.
-- [ ] Implement CLI `list --json`, `doctor --json`, and useful `--help` output.
-- [ ] Build the binary and smoke-test it from outside the repository.
+- [x] Expose only `search_skills` and `load_skill` through stdio MCP.
+- [x] Add stable structured outputs and redacted error envelopes.
+- [x] Implement CLI `list --json`, `doctor --json`, and useful `--help` output.
+- [x] Build the binary and smoke-test it from outside the repository.
 - [ ] Verify one Codex bootstrap invokes search, loads one skill, and applies the
   complete returned document on the labeled integration tasks.
 
