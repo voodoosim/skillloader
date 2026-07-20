@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "loads": [
+    {
+      "name": "api-guardian",
+      "content_sha256": "143c4c1a74e41b39f227cc48c3e09808d524ff76591430c9387ba5bc5f4f33df",
+      "content": "---\nname: api-guardian\ndescription: Review OpenAPI contracts for API security defects.\ntags: [api, security, openapi]\n---\n\n# API Guardian\n\nInspect an API contract and report concrete security defects.\n"
+    },
+    {
+      "name": "branch-surgeon",
+      "content_sha256": "6c9a0b4a0097cc141a3f940a7f60a98f3eb6cb4708a66bbf9ba317545306819e",
+      "content": "---\nname: branch-surgeon\ndescription: Plan safe Git branch and rebase workflows.\ntags: [git, branch, rebase, workflow]\n---\n\n# Branch Surgeon\n\nPrepare a deterministic branch and rebase sequence before changing history.\n"
+    },
+    {
+      "name": "cache-observer",
+      "content_sha256": "c66eea5b804aca5e56872ff8e8c59c05b93f6c0c8859a15685f527b6c2b6e90b",
+      "content": "---\nname: cache-observer\ndescription: Measure cache latency with reproducible benchmarks.\ntags: [cache, latency, benchmark]\n---\n\n# Cache Observer\n\nMeasure cold and warm cache behavior without making token-saving claims.\n"
+    },
+    {
+      "name": "contract-auditor",
+      "content_sha256": "eae24561a4d0e71e8521d172c7bac5d95ea2f5bdfd3d64d0d1410c8f5f697856",
+      "content": "---\nname: contract-auditor\ndescription: Audit MCP schema contracts for compatibility.\ntags: [mcp, schema, contract]\n---\n\n# Contract Auditor\n\nCompare an MCP implementation with its documented request and response schemas.\n"
+    },
+    {
+      "name": "docker-builder",
+      "content_sha256": "95938dc47b1ab55c8763fd5ae1cda3c9f63df1f5c76a693ccc1e64051531a50b",
+      "content": "---\nname: docker-builder\ndescription: Build reproducible Docker container images.\ntags: [docker, container, build]\n---\n\n# Docker Builder\n\nCreate a reproducible container build and record its inputs.\n"
+    },
+    {
+      "name": "incident-triage",
+      "content_sha256": "05fcc17e5177a5deffdd6fca8e3365811a209802591ee09dca784f5b4c02e1cb",
+      "content": "---\nname: incident-triage\ndescription: Diagnose production incidents with structured triage.\ntags: [production, incident, diagnosis]\n---\n\n# Incident Triage\n\nCollect observed evidence before assigning an incident cause.\n"
+    },
+    {
+      "name": "korean-router",
+      "content_sha256": "02be3011805dea729793d0ae28dcc3f8c12fc57efbffcaaca2e926597df7da4a",
+      "content": "---\nname: korean-router\ndescription: 한글 작업을 검색하고 적절한 스킬로 라우팅합니다.\ntags: [한글, 라우팅, 검색]\n---\n\n# Korean Router\n\n한글 질의에서 확인된 단어만 사용해 관련 스킬을 선택합니다.\n"
+    },
+    {
+      "name": "migration-planner",
+      "content_sha256": "cf21fbbf91060ca34f9ffa8bdbb537af13e7aeb229d52b9e3fbac4aafa9d5ea9",
+      "content": "---\nname: migration-planner\ndescription: Plan database SQL migrations and rollback steps.\ntags: [database, sql, migration]\n---\n\n# Migration Planner\n\nOrder database changes with explicit migration and rollback checkpoints.\n"
+    },
+    {
+      "name": "release-notes",
+      "content_sha256": "9cb2e773c0a76bb9c1247ff0a301cf905ade71029646806982374a8b290f989c",
+      "content": "---\nname: release-notes\ndescription: Write release changelogs and documentation.\ntags: [release, changelog, documentation]\n---\n\n# Release Notes\n\nSummarize verified changes and validation evidence for a release.\n"
+    },
+    {
+      "name": "test-designer",
+      "content_sha256": "b3f60ae98cf3892d2a4c6d0d7a28b7a91f67f88268fed06084b3d516b9ad96ba",
+      "content": "---\nname: test-designer\ndescription: Design testing fixtures and regression checks.\ntags: [testing, fixture, regression]\n---\n\n# Test Designer\n\nDefine deterministic fixtures and executable regression checks.\n"
+    }
+  ]
+}
