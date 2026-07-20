@@ -114,6 +114,22 @@ bench/results/<date>-<client>-<catalog>/
 
 Redact credentials and user data before committing results.
 
+## Core timing evidence
+
+The opt-in `TestBenchmarkEvidence` test measures direct Go catalog-core search
+and load calls over a synthetic 100-skill catalog. It reports p50, p95, and mean
+nanoseconds for 50 iterations per operation:
+
+```bash
+SKILLLOADER_BENCHMARK=1 \
+SKILLLOADER_BENCHMARK_OUTPUT=/tmp/skillloader-benchmark-evidence.json \
+go test -run TestBenchmarkEvidence -count=1 -v .
+```
+
+The recorded result is `bench/results/2026-07-20-go1.26.5-fixture100.json`.
+It is core-process timing only: it does not measure MCP transport overhead,
+Codex client behavior, token counts, or a real user catalog.
+
 ## Acceptance rule
 
 The README may publish a numerical skill-catalog overhead claim only after a
