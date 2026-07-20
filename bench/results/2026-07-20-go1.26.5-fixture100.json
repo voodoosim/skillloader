@@ -1,0 +1,11 @@
+{
+  "go_version": "go1.26.5",
+  "catalog_size": 100,
+  "iterations": 50,
+  "results": [
+    {"mode": "cold", "operation": "search", "p50_ns": 4466053, "p95_ns": 5488377, "mean_ns": 4522390},
+    {"mode": "cold", "operation": "load", "p50_ns": 34726, "p95_ns": 72943, "mean_ns": 42115},
+    {"mode": "warm", "operation": "search", "p50_ns": 29283, "p95_ns": 52900, "mean_ns": 36054},
+    {"mode": "warm", "operation": "load", "p50_ns": 19047, "p95_ns": 32290, "mean_ns": 28883}
+  ]
+}
