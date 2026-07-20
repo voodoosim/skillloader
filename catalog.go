@@ -223,17 +223,17 @@ func parseFrontmatter(text string) (map[string]string, error) {
 	}
 
 	var raw struct {
-		Name        string `yaml:"name"`
-		Description string `yaml:"description"`
-		Tags        any    `yaml:"tags"`
+		Name        any `yaml:"name"`
+		Description any `yaml:"description"`
+		Tags        any `yaml:"tags"`
 	}
 	if err := yaml.Unmarshal([]byte(strings.Join(lines[1:end], "\n")), &raw); err != nil {
 		return nil, fmt.Errorf("invalid YAML: %w", err)
 	}
 
 	fm := map[string]string{
-		"name":        raw.Name,
-		"description": raw.Description,
+		"name":        normalizeYAMLString(raw.Name),
+		"description": normalizeYAMLString(raw.Description),
 	}
 	tags, err := normalizeYAMLTags(raw.Tags)
 	if err != nil {
@@ -266,6 +266,26 @@ func normalizeYAMLTags(value any) ([]string, error) {
 		return out, nil
 	default:
 		return nil, fmt.Errorf("invalid frontmatter: tags must be a string or list")
+	}
+}
+
+func normalizeYAMLString(value any) string {
+	if value == nil {
+		return ""
+	}
+	switch v := value.(type) {
+	case string:
+		return v
+	case []any:
+		parts := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				parts = append(parts, s)
+			}
+		}
+		return strings.Join(parts, ", ")
+	default:
+		return fmt.Sprintf("%v", v)
 	}
 }
 
