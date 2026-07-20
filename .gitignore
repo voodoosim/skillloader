@@ -1,0 +1,10 @@
+/bin/
+/dist/
+/coverage.out
+/skillloader
+*.test
+*.prof
+.env
+.DS_Store
+.idea/
+.vscode/
