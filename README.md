@@ -63,7 +63,9 @@ The implemented request and response shapes are defined in
 - Two model-visible MCP tools
 - Stable JSON output for direct CLI diagnostics
 
-Live Codex bootstrap integration remains unverified.
+Client-specific live bootstrap remains unverified; see
+[docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for Claude Code, Codex,
+and OpenCode registration and isolated verification commands.
 
 `SKILLLOADER_ROOTS` may override the default roots with a comma-separated list
 of literal paths. It performs whitespace trimming only; relative paths resolve
