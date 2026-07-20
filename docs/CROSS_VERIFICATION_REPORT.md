@@ -127,22 +127,19 @@ Go's Layer 4 description matching scores `api-guardian` (description "contracts"
 
 ## 3. Performance
 
-Benchmark results at 86e303e:
+Benchmark results at a093b89 (50-skill catalog, i9-14900KF):
 
 ```
-BenchmarkSearch-4      232601  4761 ns/op   264 B/op  3 allocs/op
-BenchmarkLoad-4         10723  108477 ns/op  47869 B/op  48 allocs/op
-BenchmarkCache-4      14276376  76.82 ns/op  0 B/op  0 allocs/op
-BenchmarkSnapshotCold-4  1699  710019 ns/op  519808 B/op  115 allocs/op
-BenchmarkSnapshotWarm-4 21655  55477 ns/op   620 B/op  10 allocs/op
+BenchmarkColdBuild-24        656  1.80ms/op   719 KB/op   7546 allocs/op
+BenchmarkWarmSnapshot-24     588  2.01ms/op   472 KB/op   6279 allocs/op
 ```
 
-| Metric | Cold | Warm | Ratio |
-|---|---|---|---|
-| Snapshot index load | 710 µs | 55 µs | 12.8× |
-| Search (10-skill catalog) | — | 4.7 µs | — |
-| Load (2 KB skill) | — | 108 µs | — |
-| Cache hit | — | 77 ns | — |
+| Metric | Cold (no snapshot) | Warm (snapshot) |
+|---|---|---|
+| BuildIndex + saveSnapshot | 1.80 ms | — |
+| loadSnapshot (gob decode + mtime verify) | — | 2.01 ms |
+
+Cold and warm are similar because `loadSnapshot` must `stat()` every file for mtime verification — O(n) syscalls dominate at this catalog size. Snapshot eliminates YAML parsing cost but preserves correctness through comprehensive invalidation.
 
 ---
 
