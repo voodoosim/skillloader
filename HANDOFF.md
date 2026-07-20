@@ -10,11 +10,11 @@ remaining gates belong in `plan.md` and `CODEX_PLAN_BASELINE.md`.
 | Surface | State | Evidence |
 |---|---|---|
 | Project root | `/home/vodo/workspace/projects/skillloader` | `git rev-parse --show-toplevel` |
-| Git | Branch `fix/security-runtime-dependencies`, review base `89e2538`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
+| Git | Branch `main`, latest integration merges `bee5ac7` and `27ecc12`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
 | Runtime | Project-selected Go `1.26.5` on `linux/amd64`; `go 1.26.5` also implies the same preferred toolchain | `go.mod`, `GODEBUG=toolchaintrace=1 go version` |
 | Go environment | `GOTOOLCHAIN=auto` selects the module toolchain under the module cache; project commands no longer use the host's overlapping `GOPATH`/`GOROOT` | `go env GOVERSION GOTOOLCHAIN GOROOT GOPATH` |
 | Implementation | Local Go prototype with catalog, YAML frontmatter parsing, search, duplicate-name rejection, trusted-root load, cache, two typed MCP tools, and operator CLI | source tree and tests |
-| MCP | In-memory integration test verifies exactly `search_skills` and `load_skill`, output schemas, structured results, TextContent compatibility, and redacted errors | `go test -count=1 ./...` |
+| MCP | In-memory and subprocess stdio tests verify exactly `search_skills` and `load_skill`, output schemas, structured results, TextContent compatibility, and redacted errors | `go test -count=1 ./...`, `scripts/smoke-test.sh` |
 | CLI | `list`, `doctor`, `help`, `--help`, and `-h`; help exits 0 | unit test and outside-repository smoke |
 | Local catalog | 133 valid parsed skills, 5 errors, 133 missing-tag warnings | `go run . doctor --json` |
 | Module | `github.com/voodoosim/skillloader`; MCP SDK `v1.6.1`; YAML `v3.0.4` | `go.mod` |
@@ -80,18 +80,15 @@ cleanup; project commands use the automatically selected Go `1.26.5` toolchain.
 ## Exact unverified items
 
 - Host-level `GOPATH == GOROOT` cleanup outside the module toolchain
-- Independent review of this branch before integration
-- Frozen Python/Go parity fixtures and thresholds for catalog coverage,
-  exact-load bytes/metadata, and search ranking
-- Search-weight quality and cache cold/warm latency
 - Live Codex bootstrap behavior and end-to-end skill application
 - Token overhead and total-request token measurements
+- Real-catalog benchmark evidence beyond the committed synthetic fixture
 - Catalog hot reload, Docker, HTTP, release packaging, and platform compatibility
 
 ## Next review slice
 
-1. Review this branch against base commit `89e2538`, including duplicate-name
-   rejection and `docs/DEPENDENCY_REVIEW.md`.
-2. Re-run the commands above and inspect the five redacted doctor diagnostics.
-3. Build frozen parity fixtures before tuning ranking weights or publishing
-   performance and token claims.
+1. Run the temporary OpenCode MCP bootstrap without changing user credentials
+   or global configuration.
+2. Verify the live client performs search, one selected load, and full document
+   application.
+3. Measure token overhead separately from catalog and core-process latency.
