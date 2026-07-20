@@ -1,5 +1,14 @@
 # Gate 6 전달 메시지
 
+## 읽는 순서
+
+1. 이 문서를 먼저 읽는다.
+2. 이어서 `docs/HANDOFF_GATE6.md`를 읽는다.
+3. 측정 규칙은 `docs/PRODUCT_EVIDENCE.md`만 따른다.
+
+모르는 값은 추측하지 말고 `확인 필요`로 남긴다. 작업 결과는 같은 문서의
+“완료 후” 요구사항에 맞춰 짧게 보고한다.
+
 현재 작업 브랜치: `codex/gate6-evidence`
 
 `docs/HANDOFF_GATE6.md`를 기준으로 Gate 6을 계속 진행해줘.
