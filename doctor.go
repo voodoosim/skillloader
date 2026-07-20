@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
 // DoctorReport holds the result of a catalog diagnostic scan.
 type DoctorReport struct {
-	SkillCount int      `json:"skill_count"`
-	ErrorCount int      `json:"error_count"`
-	Errors     []string `json:"errors,omitempty"`
-	CacheDocs  int      `json:"cache_docs"`
+	SkillCount   int      `json:"skill_count"`
+	ErrorCount   int      `json:"error_count"`
+	Errors       []string `json:"errors,omitempty"`
+	WarningCount int      `json:"warning_count"`
+	Warnings     []string `json:"warnings,omitempty"`
+	CacheDocs    int      `json:"cache_docs"`
 }
 
 // Doctor scans the configured roots and reports catalog health.
@@ -29,7 +32,13 @@ func Doctor(roots []string, c *Cache) *DoctorReport {
 	for _, e := range entries {
 		seen[e.Name]++
 	}
-	for name, count := range seen {
+	var names []string
+	for name := range seen {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		count := seen[name]
 		if count > 1 {
 			report.ErrorCount++
 			report.Errors = append(report.Errors,
@@ -39,24 +48,24 @@ func Doctor(roots []string, c *Cache) *DoctorReport {
 
 	for _, e := range entries {
 		if len(e.Tags) == 0 {
-			report.ErrorCount++
-			report.Errors = append(report.Errors,
+			report.WarningCount++
+			report.Warnings = append(report.Warnings,
 				fmt.Sprintf("missing tags: %s", e.Name))
 		}
 	}
 
-	for _, root := range roots {
+	for i, root := range roots {
 		info, err := os.Stat(root)
 		if err != nil {
 			report.ErrorCount++
 			report.Errors = append(report.Errors,
-				fmt.Sprintf("unreadable root: %s (%v)", root, err))
+				fmt.Sprintf("unreadable root: root[%d]", i))
 			continue
 		}
 		if !info.IsDir() {
 			report.ErrorCount++
 			report.Errors = append(report.Errors,
-				fmt.Sprintf("root is not a directory: %s", root))
+				fmt.Sprintf("root is not a directory: root[%d]", i))
 		}
 	}
 

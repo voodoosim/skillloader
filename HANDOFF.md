@@ -2,63 +2,83 @@
 
 Last verified: 2026-07-20 KST
 
-This file is the current-state source of truth. Historical work and upcoming
-steps belong in `plan.md`.
+This file records the current branch state. Historical rationale and
+remaining gates belong in `plan.md` and `CODEX_PLAN_BASELINE.md`.
 
 ## Observed state
 
 | Surface | State | Evidence |
 |---|---|---|
 | Project root | `/home/vodo/workspace/projects/skillloader` | `git rev-parse --show-toplevel` |
-| Git | Local repository on `main`; no remote configured | `git branch --show-current`, `git remote -v` |
-| Runtime | Go `1.25.0` is installed at `/home/vodo/go/bin/go` | `go version`, `command -v go` |
-| Go environment | Effective `GOPATH` and `GOROOT` are both `/home/vodo/go`; Go emits an installation warning | `go env GOPATH GOROOT` |
-| Implementation | No Go module or runnable server yet | repository file inventory |
-| License | Not selected | repository file inventory |
-| Legacy draft | Initial misspelled directory retired after its scope was incorporated here | filesystem check |
-| Existing loader | Local Python loader reports 82 skills and 0 errors | `skill_loader.py doctor` |
+| Git | Branch `fix/review-findings`, review base `3d4caa0`, no remote configured | `git branch --show-current`, `git log --oneline`, `git remote` |
+| Runtime | Go `1.25.0` on `linux/amd64` | `go version` |
+| Go environment | Effective `GOPATH` and `GOROOT` are both `/home/vodo/go`; every Go command emits a warning | `go env GOPATH GOROOT` |
+| Implementation | Local Go prototype with catalog, YAML frontmatter parsing, search, trusted-root load, cache, two typed MCP tools, and operator CLI | source tree and tests |
+| MCP | In-memory integration test verifies exactly `search_skills` and `load_skill`, output schemas, structured results, TextContent compatibility, and redacted errors | `go test -count=1 ./...` |
+| CLI | `list`, `doctor`, `help`, `--help`, and `-h`; help exits 0 | unit test and outside-repository smoke |
+| Local catalog | 132 valid parsed skills, 6 errors, 132 missing-tag warnings | `go run . doctor --json` |
+| Module | Placeholder local module path `skillloader`; MCP SDK `v1.2.0`; YAML `v3.0.4` | `go.mod` |
+| License | Not selected | repository inventory |
 
-## Decisions recorded
+The six current doctor errors are five invalid frontmatter diagnostics (four
+documents lack an opening YAML delimiter and one has a sequence-valued
+description) plus one duplicate logical-name diagnostic. `skill_count`,
+`error_count`, and `warning_count` are independent diagnostic dimensions.
 
-- Build the core as a Go binary named `skillloader`.
-- Keep the catalog server-side and load a skill only after bounded search.
-- Expose only `search_skills` and `load_skill` to the model over MCP.
-- Keep `list` and `doctor` as direct operator CLI commands.
-- Keep the MVP local and stdio-only.
-- Defer Streamable HTTP, Docker, and a second client until the MVP evidence gates
-  pass.
-- Use in-memory indexes and parsed-document caching for latency.
-- Measure token reduction separately from cache performance.
-- Use `skillloader` consistently for the project, binary, and MCP server name.
-- Require a thin client bootstrap that tells the model when to search and how to
-  apply a loaded skill.
+## Decisions applied in this branch
 
-## Files created in the scaffold
+- Treat the product as a local skill catalog loader/server, not an operating system.
+- Treat missing tags as valid with a doctor warning.
+- Parse YAML list tags and multiline descriptions; reject documents without YAML
+  frontmatter in the MVP.
+- Keep search weights deterministic but provisional until fixture-based tuning.
+- Return no results for zero-score queries.
+- Read and hash current file bytes on every load; use the document cache only
+  after checksum verification. Cache latency remains unmeasured.
+- Enforce trusted-root containment with `os.Root` and reject direct and symlink
+  escapes.
+- Return typed MCP structured output with `catalog_revision` and stable redacted
+  application errors.
+- Require server restart for catalog/search metadata refresh; hot reload is not
+  implemented.
+- Interpret `SKILLLOADER_ROOTS` as comma-separated literal paths with whitespace
+  trimming only. Relative paths use the process working directory; quote, tilde,
+  and glob expansion are unsupported.
+- Keep search tokenization limited to English letters, digits, Hangul, and
+  hyphens. Japanese/Chinese expansion was removed as out of scope.
 
-- `README.md`
-- `AGENTS.md`
-- `HANDOFF.md`
-- `plan.md`
-- `CONTRIBUTING.md`
-- `.gitignore`
-- `docs/ARCHITECTURE.md`
-- `docs/MCP_CONTRACT.md`
-- `docs/BENCHMARK.md`
+## Verification completed in this working tree
+
+```text
+gofmt -w *.go                              completed
+go test -count=1 ./...                     pass (37 top-level test functions)
+go test -race -count=1 ./...               pass
+go vet ./...                               pass
+go build ./...                             pass
+go run . doctor --json                     132 skills / 6 errors / 132 warnings
+outside-repository binary help/list/doctor  pass
+outside-repository stdio EOF smoke          pass, exit 0
+skill_loader.py doctor                      82 skills / 0 errors
+```
+
+All Go commands still emit the observed `GOPATH == GOROOT` warning.
 
 ## Exact unverified items
 
-- Go module path and GitHub repository owner
-- Open-source license
-- Correct Go environment layout; current `GOPATH`/`GOROOT` equality emits a warning
-- Official Go MCP SDK version to pin
-- CLI flag names
-- Codex bootstrap behavior
-- Routing quality, cache latency, and token-reduction measurements
+- GitHub owner, public module path, remote, and license
+- Whether to correct or explicitly accept the Go environment warning
+- Frozen Python/Go parity fixtures and thresholds for catalog coverage,
+  exact-load bytes/metadata, and search ranking
+- Search-weight quality and cache cold/warm latency
+- Live Codex bootstrap behavior and end-to-end skill application
+- Token overhead and total-request token measurements
+- Catalog hot reload, Docker, HTTP, release packaging, and platform compatibility
 
-## Next implementation slice
+## Next review slice
 
-1. Decide the module path and license.
-2. Correct or explicitly accept the observed Go environment warning.
-3. Create the smallest vertical slice: catalog, search, load, and stdio MCP.
-4. Verify all 82 current skills load and the frozen search cases match Python.
-5. Run the Codex integration and token benchmark gates in `plan.md`.
+1. Review the current branch commit against base commit `3d4caa0`.
+2. Re-run the commands above and inspect the six redacted doctor diagnostics.
+3. Decide module owner/path, license, and Go environment handling.
+4. Commit the reviewed branch before creating another worktree.
+5. Build frozen parity fixtures before tuning ranking weights or publishing
+   performance and token claims.

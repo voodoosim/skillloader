@@ -2,12 +2,20 @@ package main
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"go.yaml.in/yaml/v3"
+)
+
+var (
+	errOutsideTrustedRoots = errors.New("outside configured trusted roots")
+	errUnreadableSkill     = errors.New("trusted skill is unreadable")
 )
 
 // SkillEntry is a compact metadata record for one discovered skill.
@@ -40,25 +48,28 @@ func DiscoverSkills(roots []string) ([]string, error) {
 	seen := make(map[string]struct{})
 
 	for _, root := range roots {
-		info, err := os.Stat(root)
+		absRoot, err := filepath.Abs(root)
 		if err != nil {
 			continue
 		}
-		if info.IsDir() {
-			_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-				if err != nil {
-					return nil
-				}
-				if d.Name() == "SKILL.md" && d.Type().IsRegular() {
-					abs, _ := filepath.Abs(p)
-					if _, ok := seen[abs]; !ok {
-						seen[abs] = struct{}{}
-						paths = append(paths, abs)
-					}
-				}
-				return nil
-			})
+		trustedRoot, err := os.OpenRoot(absRoot)
+		if err != nil {
+			continue
 		}
+		_ = fs.WalkDir(trustedRoot.FS(), ".", func(rel string, d fs.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return nil
+			}
+			if d.Name() == "SKILL.md" && d.Type().IsRegular() {
+				path := filepath.Join(absRoot, filepath.FromSlash(rel))
+				if _, ok := seen[path]; !ok {
+					seen[path] = struct{}{}
+					paths = append(paths, path)
+				}
+			}
+			return nil
+		})
+		_ = trustedRoot.Close()
 	}
 
 	sort.Strings(paths)
@@ -66,16 +77,19 @@ func DiscoverSkills(roots []string) ([]string, error) {
 }
 
 // ParseSkill reads a SKILL.md file and extracts frontmatter metadata.
-func ParseSkill(path string) (SkillEntry, error) {
-	data, err := os.ReadFile(path)
+func ParseSkill(path string, roots []string) (SkillEntry, error) {
+	data, err := readTrustedFile(roots, path)
 	if err != nil {
-		return SkillEntry{}, fmt.Errorf("read %s: %w", path, err)
+		return SkillEntry{}, err
 	}
+	return parseSkillData(path, data)
+}
 
+func parseSkillData(path string, data []byte) (SkillEntry, error) {
 	hash := fmt.Sprintf("%x", sha256.Sum256(data))
 	fm, err := parseFrontmatter(string(data))
 	if err != nil {
-		return SkillEntry{}, fmt.Errorf("parse %s: %w", path, err)
+		return SkillEntry{}, fmt.Errorf("invalid frontmatter: %w", err)
 	}
 
 	name := fm["name"]
@@ -84,7 +98,7 @@ func ParseSkill(path string) (SkillEntry, error) {
 	tags := parseTagList(fm["tags"])
 
 	if name == "" {
-		return SkillEntry{}, fmt.Errorf("parse %s: missing name in frontmatter", path)
+		return SkillEntry{}, fmt.Errorf("invalid frontmatter: missing name")
 	}
 
 	return SkillEntry{
@@ -106,10 +120,10 @@ func BuildIndex(roots []string) ([]SkillEntry, []string, error) {
 
 	var entries []SkillEntry
 	var errors []string
-	for _, p := range paths {
-		entry, err := ParseSkill(p)
+	for i, p := range paths {
+		entry, err := ParseSkill(p, roots)
 		if err != nil {
-			errors = append(errors, err.Error())
+			errors = append(errors, fmt.Sprintf("skill[%d]: %s", i, redactedCatalogError(err)))
 			continue
 		}
 		entries = append(entries, entry)
@@ -122,19 +136,84 @@ func BuildIndex(roots []string) ([]SkillEntry, []string, error) {
 	return entries, errors, nil
 }
 
+func redactedCatalogError(err error) string {
+	switch {
+	case errors.Is(err, errOutsideTrustedRoots):
+		return "source escapes its trusted root"
+	case errors.Is(err, errUnreadableSkill):
+		return "document is unreadable"
+	default:
+		return err.Error()
+	}
+}
+
+func readTrustedFile(roots []string, path string) ([]byte, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, errOutsideTrustedRoots
+	}
+
+	for _, configuredRoot := range roots {
+		absRoot, err := filepath.Abs(configuredRoot)
+		if err != nil {
+			continue
+		}
+		rel, err := filepath.Rel(absRoot, absPath)
+		if err != nil || rel == "." || filepath.IsAbs(rel) || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			continue
+		}
+
+		resolvedRoot, err := filepath.EvalSymlinks(absRoot)
+		if err != nil {
+			return nil, errUnreadableSkill
+		}
+		resolvedPath, err := filepath.EvalSymlinks(absPath)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return nil, errUnreadableSkill
+			}
+			return nil, errOutsideTrustedRoots
+		}
+		if !pathWithinRoot(resolvedRoot, resolvedPath) {
+			return nil, errOutsideTrustedRoots
+		}
+
+		trustedRoot, err := os.OpenRoot(absRoot)
+		if err != nil {
+			return nil, errUnreadableSkill
+		}
+		data, readErr := trustedRoot.ReadFile(rel)
+		_ = trustedRoot.Close()
+		if readErr != nil {
+			if errors.Is(readErr, os.ErrNotExist) {
+				return nil, errUnreadableSkill
+			}
+			return nil, errOutsideTrustedRoots
+		}
+		return data, nil
+	}
+
+	return nil, errOutsideTrustedRoots
+}
+
+func pathWithinRoot(root, path string) bool {
+	rel, err := filepath.Rel(root, path)
+	return err == nil && rel != "." && !filepath.IsAbs(rel) && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
 // ---------------------------------------------------------------------------
 // Frontmatter parser
 // ---------------------------------------------------------------------------
 
 func parseFrontmatter(text string) (map[string]string, error) {
 	lines := strings.Split(text, "\n")
-	if len(lines) == 0 || strings.TrimSpace(lines[0]) != "---" {
+	if len(lines) == 0 || strings.TrimSuffix(lines[0], "\r") != "---" {
 		return nil, fmt.Errorf("missing opening frontmatter delimiter")
 	}
 
 	end := -1
 	for i := 1; i < len(lines); i++ {
-		if strings.TrimSpace(lines[i]) == "---" {
+		if strings.TrimSuffix(lines[i], "\r") == "---" {
 			end = i
 			break
 		}
@@ -143,19 +222,51 @@ func parseFrontmatter(text string) (map[string]string, error) {
 		return nil, fmt.Errorf("missing closing frontmatter delimiter")
 	}
 
-	fm := make(map[string]string)
-	for i := 1; i < end; i++ {
-		line := lines[i]
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		val := strings.TrimSpace(parts[1])
-		val = strings.Trim(val, "\"'")
-		fm[key] = val
+	var raw struct {
+		Name        string `yaml:"name"`
+		Description string `yaml:"description"`
+		Tags        any    `yaml:"tags"`
+	}
+	if err := yaml.Unmarshal([]byte(strings.Join(lines[1:end], "\n")), &raw); err != nil {
+		return nil, fmt.Errorf("invalid YAML: %w", err)
+	}
+
+	fm := map[string]string{
+		"name":        raw.Name,
+		"description": raw.Description,
+	}
+	tags, err := normalizeYAMLTags(raw.Tags)
+	if err != nil {
+		return nil, err
+	}
+	if len(tags) > 0 {
+		fm["tags"] = "[" + strings.Join(tags, ", ") + "]"
 	}
 	return fm, nil
+}
+
+func normalizeYAMLTags(value any) ([]string, error) {
+	switch tags := value.(type) {
+	case nil:
+		return nil, nil
+	case string:
+		return parseTagList(tags), nil
+	case []any:
+		out := make([]string, 0, len(tags))
+		for _, item := range tags {
+			tag, ok := item.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid frontmatter: tags must contain strings")
+			}
+			tag = strings.TrimSpace(strings.TrimPrefix(tag, "#"))
+			if tag != "" {
+				out = append(out, tag)
+			}
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("invalid frontmatter: tags must be a string or list")
+	}
 }
 
 func parseTagList(raw string) []string {

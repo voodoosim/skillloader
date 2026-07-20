@@ -2,11 +2,13 @@
 
 **Keep every skill. Load only the one you need.**
 
-SkillLoader is a planned MCP server that keeps a large skill catalog outside an
+SkillLoader is a Go MCP server prototype that keeps a large skill catalog outside an
 AI agent's steady-state context. The agent searches the catalog and loads the
 smallest matching skill only when a task needs it.
 
-> Status: documentation scaffold. No runnable server exists yet.
+> Status: local prototype. Core unit and in-memory MCP tests exist; live Codex
+> integration, parity fixtures, benchmarks, release packaging, and public
+> compatibility claims are not complete.
 
 ## Why
 
@@ -31,10 +33,11 @@ The complete catalog stays on the server. A normal task should expose only:
 2. a bounded set of search matches; and
 3. the body of the selected skill.
 
-Caching improves catalog lookup and file-loading latency. It does not remove the
-tokens of a skill body after that body is returned to the model.
+Every load reads and hashes the current file bytes before consulting the document
+cache. The cache avoids re-validating unchanged frontmatter; its latency effect is
+not yet measured. It does not remove the tokens of a returned skill body.
 
-## Planned model-visible MCP tools
+## Model-visible MCP tools
 
 | Tool | Purpose |
 |---|---|
@@ -49,38 +52,44 @@ skillloader list --json
 skillloader doctor --json
 ```
 
-The proposed request and response shapes are defined in
+The implemented request and response shapes are defined in
 [docs/MCP_CONTRACT.md](docs/MCP_CONTRACT.md).
 
-## Planned delivery
+## Current local interface
 
 - One Go binary named `skillloader`
 - MCP over stdio for local clients
 - Two model-visible MCP tools
-- One verified Codex bootstrap integration for the MVP
 - Stable JSON output for direct CLI diagnostics
+
+Live Codex bootstrap integration remains unverified.
+
+`SKILLLOADER_ROOTS` may override the default roots with a comma-separated list
+of literal paths. It performs whitespace trimming only; relative paths resolve
+against the process working directory, and quoting, tilde expansion, and glob
+expansion are not supported. Search tokenization currently
+supports English letters, digits, Hangul, and hyphens.
 
 Streamable HTTP, Docker, and additional client integrations are post-MVP work.
 They start only after the local token and routing claims are measured.
 
 The MCP specification defines tools as schema-described interfaces whose calls
-return structured or unstructured content. SkillLoader will use that standard
-boundary rather than inventing a client-specific transport:
+return structured or unstructured content. SkillLoader uses typed output schemas,
+structured content, and a JSON TextContent compatibility copy:
 [MCP tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools).
 
 ## Token claim
 
-The target is a **90% reduction in skill-catalog overhead**, not a guaranteed
-90% reduction in every request's total tokens. No percentage is considered
-proven until the reproducible benchmark in
-[docs/BENCHMARK.md](docs/BENCHMARK.md) produces it.
+No token-reduction percentage is currently proven. Catalog overhead and total
+request tokens must be measured separately using [docs/BENCHMARK.md](docs/BENCHMARK.md)
+before publishing a numerical claim.
 
 ## Project documents
 
 - [HANDOFF.md](HANDOFF.md) — current project state
 - [plan.md](plan.md) — implementation sequence and open decisions
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — components and trust boundaries
-- [docs/MCP_CONTRACT.md](docs/MCP_CONTRACT.md) — proposed public interface
+- [docs/MCP_CONTRACT.md](docs/MCP_CONTRACT.md) — current prototype interface
 - [docs/BENCHMARK.md](docs/BENCHMARK.md) — token, routing, and latency evaluation
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution and verification rules
 

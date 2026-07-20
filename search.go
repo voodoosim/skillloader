@@ -12,6 +12,16 @@ type SearchEngine struct {
 	index []SkillEntry
 }
 
+// Ranking weights are deterministic prototype defaults. They have not been
+// tuned against a frozen relevance fixture or benchmark.
+const (
+	tagMatchScore         = 8
+	exactNameMatchScore   = 100
+	partialNameMatchScore = 20
+	descriptionMatchScore = 5
+	tagOnlyBonus          = 4
+)
+
 // NewSearchEngine returns an engine backed by the given catalog index.
 func NewSearchEngine(index []SkillEntry) *SearchEngine {
 	return &SearchEngine{index: index}
@@ -66,10 +76,14 @@ func (e *SearchEngine) Search(query string, limit int) []SearchMatch {
 
 	matches := make([]SearchMatch, 0, len(scored))
 	for _, s := range scored {
+		tags := s.entry.Tags
+		if tags == nil {
+			tags = []string{}
+		}
 		matches = append(matches, SearchMatch{
 			Name:        s.entry.Name,
 			Description: s.entry.Description,
-			Tags:        s.entry.Tags,
+			Tags:        tags,
 			Source:      s.entry.Source,
 			Score:       s.score,
 		})
@@ -119,7 +133,7 @@ func layerTagMatch(tokens []string, index []SkillEntry) []int {
 		for _, tok := range tokens {
 			for _, tag := range entry.Tags {
 				if strings.Contains(strings.ToLower(tag), tok) {
-					scores[i] += 8
+					scores[i] += tagMatchScore
 				}
 			}
 		}
@@ -137,9 +151,9 @@ func layerNameMatch(tokens []string, index []SkillEntry) []int {
 		nameLow := strings.ToLower(entry.Name)
 		for _, tok := range tokens {
 			if nameLow == tok {
-				scores[i] += 100
+				scores[i] += exactNameMatchScore
 			} else if strings.Contains(nameLow, tok) {
-				scores[i] += 20
+				scores[i] += partialNameMatchScore
 			}
 		}
 	}
@@ -156,7 +170,7 @@ func layerDescriptionMatch(tokens []string, index []SkillEntry) []int {
 		descLow := strings.ToLower(entry.Description)
 		for _, tok := range tokens {
 			if strings.Contains(descLow, tok) {
-				scores[i] += 5
+				scores[i] += descriptionMatchScore
 			}
 		}
 	}
@@ -177,7 +191,7 @@ func layerAggregate(index []SkillEntry, tagScores, nameScores, descScores []int)
 	for i := range tagScores {
 		total := tagScores[i] + nameScores[i] + descScores[i]
 		if tagScores[i] > 0 && nameScores[i] == 0 {
-			total += 4 // bonus for tag-only match
+			total += tagOnlyBonus
 		}
 		out[i] = scoredEntry{entry: index[i], score: total}
 	}
@@ -211,6 +225,9 @@ func layerDedup(scored []scoredEntry) []scoredEntry {
 func layerSafetyFilter(scored []scoredEntry) []scoredEntry {
 	out := make([]scoredEntry, 0, len(scored))
 	for _, s := range scored {
+		if s.score <= 0 {
+			continue
+		}
 		if s.entry.Name == "" {
 			continue
 		}

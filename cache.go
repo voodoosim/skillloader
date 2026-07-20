@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"os"
 	"sync"
 )
 
@@ -41,13 +40,16 @@ func (c *Cache) LoadIndex() []SkillEntry {
 func (c *Cache) StoreIndex(index []SkillEntry) {
 	h := sha256.New()
 	for _, e := range index {
+		h.Write([]byte(e.Name))
+		h.Write([]byte{0})
 		h.Write([]byte(e.Checksum))
+		h.Write([]byte{0})
 	}
-	hash := fmt.Sprintf("%x", h.Sum(nil))
+	hash := fmt.Sprintf("sha256:%x", h.Sum(nil))
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.index = index
+	c.index = append([]SkillEntry{}, index...)
 	c.indexHash = hash
 }
 
@@ -59,7 +61,7 @@ func (c *Cache) IndexHash() string {
 }
 
 // GetDocument returns a cached skill body if it is still valid.
-func (c *Cache) GetDocument(path string) (string, bool) {
+func (c *Cache) GetDocument(path, checksum string) (string, bool) {
 	c.mu.RLock()
 	doc, ok := c.docs[path]
 	c.mu.RUnlock()
@@ -67,10 +69,11 @@ func (c *Cache) GetDocument(path string) (string, bool) {
 		return "", false
 	}
 
-	current := fileChecksum(path)
-	if current == "" || current != doc.checksum {
+	if checksum == "" || checksum != doc.checksum {
 		c.mu.Lock()
-		delete(c.docs, path)
+		if current, exists := c.docs[path]; exists && current.checksum != checksum {
+			delete(c.docs, path)
+		}
 		c.mu.Unlock()
 		return "", false
 	}
@@ -79,10 +82,9 @@ func (c *Cache) GetDocument(path string) (string, bool) {
 }
 
 // SetDocument stores a skill body with its current checksum.
-func (c *Cache) SetDocument(path, content string) {
-	cs := fileChecksum(path)
+func (c *Cache) SetDocument(path, content, checksum string) {
 	c.mu.Lock()
-	c.docs[path] = cachedDoc{content: content, checksum: cs}
+	c.docs[path] = cachedDoc{content: content, checksum: checksum}
 	c.mu.Unlock()
 }
 
@@ -107,12 +109,4 @@ func (c *Cache) DocCount() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return len(c.docs)
-}
-
-func fileChecksum(path string) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	return fmt.Sprintf("%x", sha256.Sum256(data))
 }

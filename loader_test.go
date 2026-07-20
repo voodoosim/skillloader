@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,11 +35,11 @@ Body content here.
 		Tags:        []string{"test", "loader"},
 		Source:      "test",
 		Path:        skillPath,
-		Checksum:    "dummy",
+		Checksum:    fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
 	}}
 
 	cache := NewCache()
-	loader := NewSkillLoader(index, cache)
+	loader := NewSkillLoader(index, []string{tmp}, cache)
 
 	result, err := loader.Load("test-loader")
 	if err != nil {
@@ -49,13 +51,13 @@ Body content here.
 	if !strings.Contains(result.Content, "# Test Skill") {
 		t.Errorf("content missing body: %s", result.Content)
 	}
-	if result.ContentSHA != "dummy" {
+	if result.ContentSHA != index[0].Checksum {
 		t.Errorf("content SHA = %q", result.ContentSHA)
 	}
 }
 
 func TestLoaderNotFound(t *testing.T) {
-	loader := NewSkillLoader(nil, NewCache())
+	loader := NewSkillLoader(nil, nil, NewCache())
 	_, err := loader.Load("nonexistent")
 	if err == nil {
 		t.Fatal("expected error for missing skill")
@@ -70,7 +72,7 @@ func TestLoaderAmbiguousName(t *testing.T) {
 		{Name: "dupe", Source: "codex", Path: "/a/SKILL.md"},
 		{Name: "dupe", Source: "claude", Path: "/b/SKILL.md"},
 	}
-	loader := NewSkillLoader(index, NewCache())
+	loader := NewSkillLoader(index, nil, NewCache())
 	_, err := loader.Load("dupe")
 	if err == nil {
 		t.Fatal("expected error for ambiguous name")
@@ -84,7 +86,7 @@ func TestLoaderRejectsTraversal(t *testing.T) {
 	loader := NewSkillLoader([]SkillEntry{
 		{Name: "escape", Source: "codex",
 			Path: "/home/vodo/../../../etc/passwd"},
-	}, NewCache())
+	}, []string{"/home/vodo"}, NewCache())
 	_, err := loader.Load("escape")
 	if err == nil {
 		t.Fatal("expected error for traversal path")
@@ -102,8 +104,8 @@ func TestCacheStoreAndGet(t *testing.T) {
 	content := "cached content"
 	os.WriteFile(path, []byte(content), 0644)
 
-	c.SetDocument(path, content)
-	got, ok := c.GetDocument(path)
+	c.SetDocument(path, content, "v1")
+	got, ok := c.GetDocument(path, "v1")
 	if !ok {
 		t.Fatal("cache miss after SetDocument")
 	}
@@ -119,10 +121,10 @@ func TestCacheInvalidatesOnChange(t *testing.T) {
 	path := filepath.Join(tmp, "skill.md")
 	os.WriteFile(path, []byte("v1"), 0644)
 
-	c.SetDocument(path, "v1")
+	c.SetDocument(path, "v1", "checksum-v1")
 	os.WriteFile(path, []byte("v2"), 0644)
 
-	_, ok := c.GetDocument(path)
+	_, ok := c.GetDocument(path, "checksum-v2")
 	if ok {
 		t.Fatal("cache should invalidate when file changes")
 	}
@@ -149,7 +151,7 @@ func TestCacheInvalidateAll(t *testing.T) {
 	tmp := t.TempDir()
 	path := filepath.Join(tmp, "skill.md")
 	os.WriteFile(path, []byte("test"), 0644)
-	c.SetDocument(path, "test")
+	c.SetDocument(path, "test", "checksum")
 	c.InvalidateAll()
 	if c.DocCount() != 0 {
 		t.Errorf("expected 0 docs after invalidate, got %d", c.DocCount())
@@ -159,19 +161,85 @@ func TestCacheInvalidateAll(t *testing.T) {
 	}
 }
 
-func TestLoaderValidatePath(t *testing.T) {
-	tests := []struct {
-		path    string
-		wantErr bool
-	}{
-		{"/nonexistent/path/skill.md", true}, // EvalSymlinks fails on non-existent
-		{"/home/vodo/../../../etc/passwd", true},
+func TestLoaderRejectsSymlinkEscape(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	outsidePath := filepath.Join(outside, "SKILL.md")
+	if err := os.WriteFile(outsidePath, []byte("---\nname: escaped\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	linkPath := filepath.Join(root, "SKILL.md")
+	if err := os.Symlink(outsidePath, linkPath); err != nil {
+		t.Fatal(err)
 	}
 
-	for _, tt := range tests {
-		err := validatePath(tt.path)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("validatePath(%q) error=%v, wantErr=%v", tt.path, err, tt.wantErr)
-		}
+	loader := NewSkillLoader([]SkillEntry{{Name: "escaped", Path: linkPath}}, []string{root}, NewCache())
+	_, err := loader.Load("escaped")
+	if err == nil {
+		t.Fatal("expected symlink escape to be rejected")
+	}
+	if !strings.Contains(err.Error(), "UNSAFE_SOURCE") {
+		t.Fatalf("symlink escape error = %v, want UNSAFE_SOURCE", err)
+	}
+	if strings.Contains(err.Error(), root) || strings.Contains(err.Error(), outside) {
+		t.Fatalf("symlink escape error leaked a path: %v", err)
+	}
+}
+
+func TestLoaderRejectsDirectPathOutsideTrustedRoot(t *testing.T) {
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "SKILL.md")
+	if err := os.WriteFile(outside, []byte("---\nname: outside\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	loader := NewSkillLoader([]SkillEntry{{Name: "outside", Path: outside}}, []string{root}, NewCache())
+	_, err := loader.Load("outside")
+	if err == nil || !strings.Contains(err.Error(), "UNSAFE_SOURCE") {
+		t.Fatalf("outside path error = %v, want UNSAFE_SOURCE", err)
+	}
+}
+
+func TestLoaderReturnsChecksumForCurrentContent(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "SKILL.md")
+	initial := []byte("---\nname: changing\n---\nv1\n")
+	current := []byte("---\nname: changing\n---\nv2\n")
+	if err := os.WriteFile(path, initial, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldChecksum := fmt.Sprintf("%x", sha256.Sum256(initial))
+	if err := os.WriteFile(path, current, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	loader := NewSkillLoader([]SkillEntry{{
+		Name: "changing", Path: path, Checksum: oldChecksum,
+	}}, []string{tmp}, NewCache())
+	result, err := loader.Load("changing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := fmt.Sprintf("%x", sha256.Sum256(current))
+	if result.ContentSHA != want {
+		t.Fatalf("content SHA = %q, want current checksum %q", result.ContentSHA, want)
+	}
+}
+
+func TestLoaderDoesNotReturnCachedContentAfterRemoval(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "SKILL.md")
+	content := []byte("---\nname: removable\n---\nbody\n")
+	if err := os.WriteFile(path, content, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	loader := NewSkillLoader([]SkillEntry{{Name: "removable", Path: path}}, []string{root}, NewCache())
+	if _, err := loader.Load("removable"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loader.Load("removable"); err == nil || !strings.Contains(err.Error(), "INVALID_SKILL") {
+		t.Fatalf("removed document error = %v, want INVALID_SKILL", err)
 	}
 }

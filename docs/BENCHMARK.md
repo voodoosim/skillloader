@@ -13,10 +13,10 @@ No token-reduction percentage is currently verified.
 1. Catalog size can grow without placing every skill description in steady-state
    model context.
 2. A routed task can expose a bounded match set and one selected skill body.
-3. Skill-catalog overhead can be reduced by a target of 90% under documented
-   catalog sizes and client configurations.
-4. Warm cache operation improves server latency but does not change the token
-   size of an identical tool result.
+3. Skill-catalog overhead and total request tokens can be measured separately
+   under documented catalog sizes and client configurations.
+4. Cold and warm load latency can be compared without treating cache behavior
+   as token savings.
 
 ## Compared configurations
 
@@ -37,7 +37,8 @@ selected skill, and sampling settings must match between configurations.
 
 ## Catalog sets
 
-- The current real catalog, observed at 82 skills before implementation starts
+- A recorded snapshot of the real catalog; its count is an observation, not a
+  parity target
 - A versioned medium fixture catalog
 - A versioned large fixture catalog
 
@@ -115,7 +116,7 @@ Redact credentials and user data before committing results.
 
 ## Acceptance rule
 
-The README may claim “up to 90% lower skill-catalog overhead” only after a
-committed result reaches that value and states the client, catalog size, task
-set, and measurement method next to the claim. Total-token savings must never be
-substituted with catalog-only savings.
+The README may publish a numerical skill-catalog overhead claim only after a
+committed result states the client, catalog size, task set, and measurement
+method next to the result. Total-token savings must never be substituted with
+catalog-only savings.

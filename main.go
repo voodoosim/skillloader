@@ -2,30 +2,33 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func main() {
 	if len(os.Args) > 1 {
-		runCLI(os.Args[1:])
-		return
+		os.Exit(runCLI(os.Args[1:], os.Stdout, os.Stderr))
 	}
 
-	runServer()
+	if err := runServer(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func runServer() {
+func runServer() error {
 	roots := getRoots()
 
 	cache := NewCache()
 	index, errs, err := BuildIndex(roots)
 	if err != nil {
-		log.Fatalf("catalog build failed: %v", err)
+		return fmt.Errorf("catalog build failed")
 	}
 	if len(errs) > 0 {
 		for _, e := range errs {
@@ -34,8 +37,31 @@ func runServer() {
 	}
 	cache.StoreIndex(index)
 
+	server := newServer(index, roots, cache)
+	log.Printf("SkillLoader MCP server starting (roots: %d)", len(roots))
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		return fmt.Errorf("server stopped: %w", err)
+	}
+	return nil
+}
+
+type SearchOutput struct {
+	Query           string        `json:"query"`
+	Limit           int           `json:"limit"`
+	Matches         []SearchMatch `json:"matches"`
+	CatalogRevision string        `json:"catalog_revision"`
+	Error           *SkillError   `json:"error,omitempty"`
+}
+
+type LoadOutput struct {
+	Skill           *LoadResult `json:"skill,omitempty"`
+	CatalogRevision string      `json:"catalog_revision"`
+	Error           *SkillError `json:"error,omitempty"`
+}
+
+func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 	engine := NewSearchEngine(index)
-	loader := NewSkillLoader(index, cache)
+	loader := NewSkillLoader(index, roots, cache)
 
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "skillloader",
@@ -45,9 +71,13 @@ func runServer() {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_skills",
 		Description: "Search the skill catalog by task description. Returns bounded, ranked metadata matches. Use this before loading a skill to find the best match.",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, input SearchInput) (*mcp.CallToolResult, any, error) {
-		if input.Query == "" {
-			return nil, nil, fmt.Errorf("query is required")
+	}, func(ctx context.Context, req *mcp.CallToolRequest, input SearchInput) (*mcp.CallToolResult, SearchOutput, error) {
+		if strings.TrimSpace(input.Query) == "" {
+			return &mcp.CallToolResult{IsError: true}, SearchOutput{
+				Matches:         []SearchMatch{},
+				CatalogRevision: cache.IndexHash(),
+				Error:           skillError("INVALID_ARGUMENT", "A non-empty search query is required."),
+			}, nil
 		}
 		limit := input.Limit
 		if limit <= 0 || limit > 10 {
@@ -56,78 +86,93 @@ func runServer() {
 
 		results := engine.Search(input.Query, limit)
 
-		output := map[string]interface{}{
-			"query":   input.Query,
-			"limit":   limit,
-			"matches": results,
-		}
-
-		data, _ := json.MarshalIndent(output, "", "  ")
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: string(data)},
-			},
-		}, nil, nil
+		return nil, SearchOutput{
+			Query:           input.Query,
+			Limit:           limit,
+			Matches:         results,
+			CatalogRevision: cache.IndexHash(),
+		}, nil
 	})
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "load_skill",
 		Description: "Load a skill by exact logical name. Returns the complete skill document. Use only the name returned by search_skills.",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, input LoadInput) (*mcp.CallToolResult, any, error) {
-		if input.Name == "" {
-			return nil, nil, fmt.Errorf("name is required")
+	}, func(ctx context.Context, req *mcp.CallToolRequest, input LoadInput) (*mcp.CallToolResult, LoadOutput, error) {
+		if strings.TrimSpace(input.Name) == "" {
+			return &mcp.CallToolResult{IsError: true}, LoadOutput{
+				CatalogRevision: cache.IndexHash(),
+				Error:           skillError("INVALID_ARGUMENT", "A non-empty logical skill name is required."),
+			}, nil
 		}
 
 		result, err := loader.Load(input.Name)
 		if err != nil {
-			return nil, nil, fmt.Errorf("%v", err)
+			var appErr *SkillError
+			if !errors.As(err, &appErr) {
+				appErr = skillError("INTERNAL_ERROR", "The skill could not be loaded.")
+			}
+			return &mcp.CallToolResult{IsError: true}, LoadOutput{
+				CatalogRevision: cache.IndexHash(),
+				Error:           appErr,
+			}, nil
 		}
 
-		output := map[string]interface{}{
-			"skill": result,
-		}
-
-		data, _ := json.MarshalIndent(output, "", "  ")
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: string(data)},
-			},
-		}, nil, nil
+		return nil, LoadOutput{
+			Skill:           result,
+			CatalogRevision: cache.IndexHash(),
+		}, nil
 	})
 
-	log.Printf("SkillLoader MCP server starting (roots: %d)", len(roots))
-	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
-		log.Fatalf("server error: %v", err)
-	}
+	return server
 }
 
-func runCLI(args []string) {
+func runCLI(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
+		printUsage(stdout)
+		return 0
+	}
+
 	roots := getRoots()
 	cache := NewCache()
 
 	switch args[0] {
 	case "list":
 		if len(args) > 1 && args[1] == "--json" {
-			fmt.Println(ListJSON(roots))
+			fmt.Fprintln(stdout, ListJSON(roots))
 		} else {
-			fmt.Print(ListText(roots))
+			fmt.Fprint(stdout, ListText(roots))
 		}
 
 	case "doctor":
 		if len(args) > 1 && args[1] == "--json" {
-			fmt.Println(DoctorJSON(roots, cache))
+			fmt.Fprintln(stdout, DoctorJSON(roots, cache))
 		} else {
 			report := Doctor(roots, cache)
-			fmt.Printf("skills=%d errors=%d\n", report.SkillCount, report.ErrorCount)
+			fmt.Fprintf(stdout, "skills=%d errors=%d warnings=%d\n", report.SkillCount, report.ErrorCount, report.WarningCount)
 			for _, e := range report.Errors {
-				fmt.Println(e)
+				fmt.Fprintln(stdout, e)
+			}
+			for _, warning := range report.Warnings {
+				fmt.Fprintln(stdout, warning)
 			}
 		}
 
 	default:
-		fmt.Fprintf(os.Stderr, "usage: skillloader [list|doctor] [--json]\n")
-		os.Exit(1)
+		fmt.Fprintf(stderr, "unknown command: %s\n", args[0])
+		printUsage(stderr)
+		return 1
 	}
+	return 0
+}
+
+func printUsage(w io.Writer) {
+	fmt.Fprintln(w, "usage: skillloader [list|doctor] [--json]")
+	fmt.Fprintln(w, "       skillloader [help|--help|-h]")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "list    list catalog metadata")
+	fmt.Fprintln(w, "doctor  diagnose roots, documents, duplicates, and missing tags")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "SKILLLOADER_ROOTS is a comma-separated path list; no quote, tilde, or glob expansion.")
 }
 
 type SearchInput struct {

@@ -7,9 +7,10 @@ changes. Verify the Git root, branch, and worktree first.
 
 ## Current status
 
-The repository is documentation-only. Do not claim that the server, CLI,
-cache, client adapters, Docker image, token reduction, or compatibility matrix
-is implemented until code and verification evidence exist.
+The repository contains a Go prototype for the catalog, search, loader, cache,
+two MCP tools, and operator CLI. Do not claim live Codex integration, Python
+parity, benchmark results, release packaging, Docker support, token reduction,
+or a compatibility matrix until verification evidence exists.
 
 ## Product invariants
 
@@ -44,14 +45,18 @@ https://github.com/modelcontextprotocol/go-sdk
 
 ## Verification
 
-While the repository is documentation-only, run:
+For Go or documentation changes, run and record:
 
 ```bash
+gofmt -d *.go
+go test -count=1 ./...
+go test -race -count=1 ./...
+go vet ./...
+go build ./...
 git diff --check
 git status --short
 rg -n "90%|implemented|supported|compatible" README.md HANDOFF.md plan.md docs
 ```
 
-After Go code exists, document and run exact format, build, test, race, parity,
-benchmark, and smoke-test commands before reporting the implementation as
-working.
+Parity, benchmark, live-client, and outside-repository smoke claims require their
+own exact commands and evidence.

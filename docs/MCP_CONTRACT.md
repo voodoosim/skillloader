@@ -1,7 +1,9 @@
-# Proposed MCP Contract
+# MCP Contract
 
-This document defines the first public interface. It is a proposal until the Go
-server and protocol tests exist.
+This document defines the current local prototype interface. In-memory protocol
+tests cover tool discovery, typed output schemas, structured success results,
+redacted structured errors, and the TextContent compatibility copy. Live Codex
+compatibility is not yet verified.
 
 ## Design rules
 
@@ -13,7 +15,7 @@ server and protocol tests exist.
 - Never include credentials or unrelated file contents in diagnostics.
 
 The MCP specification permits structured output and recommends returning its
-serialized form as text for compatibility. The implementation should follow
+serialized form as text for compatibility. The implementation follows
 that behavior:
 https://modelcontextprotocol.io/specification/2025-06-18/server/tools
 
@@ -21,7 +23,7 @@ https://modelcontextprotocol.io/specification/2025-06-18/server/tools
 
 Search compact catalog metadata.
 
-Proposed input:
+Input:
 
 ```json
 {
@@ -30,7 +32,7 @@ Proposed input:
 }
 ```
 
-Proposed result:
+Result:
 
 ```json
 {
@@ -40,8 +42,7 @@ Proposed result:
       "description": "Review code for concrete security defects.",
       "tags": ["security", "review"],
       "source": "local",
-      "score": 84,
-      "reasons": ["tag:security", "term:review"]
+      "score": 84
     }
   ],
   "query": "review this Go MCP server for path traversal",
@@ -53,7 +54,7 @@ Proposed result:
 Rules:
 
 - `query` is required and non-empty.
-- The server applies a configured maximum even if a larger limit is requested.
+- Valid limits are 1 through 10. Missing or out-of-range values use 5.
 - Scores are meaningful only within one catalog revision and ranking version.
 - Results contain metadata, not full skill bodies.
 
@@ -61,7 +62,7 @@ Rules:
 
 Resolve and return one validated skill document.
 
-Proposed input:
+Input:
 
 ```json
 {
@@ -69,7 +70,7 @@ Proposed input:
 }
 ```
 
-Proposed result:
+Result:
 
 ```json
 {
@@ -93,24 +94,30 @@ Rules:
 ## Non-MCP operator CLI
 
 Catalog inspection and diagnostics are intentionally excluded from the
-model-visible MCP surface. They are proposed as direct CLI commands:
+model-visible MCP surface. They are direct CLI commands:
 
 ```text
 skillloader list --json
 skillloader doctor --json
 ```
 
-`list --json` pages through catalog metadata without loading skill bodies.
-`doctor --json` returns bounded, redacted root, document, duplicate, catalog,
+`list --json` returns catalog metadata without loading skill bodies.
+`doctor --json` returns redacted root, document, duplicate, catalog,
 and cache diagnostics. Their stable JSON shapes are a CLI contract and do not
 add tool schemas to model context.
 
+`SKILLLOADER_ROOTS` accepts comma-separated literal paths with surrounding
+whitespace trimmed. Relative paths resolve against the process working directory.
+Quote handling, tilde expansion, and glob expansion are not part of the current
+contract.
+
 ## Error envelope
 
-Application-level failures should remain machine-readable tool results:
+Application-level failures are machine-readable tool results with `isError` set:
 
 ```json
 {
+  "catalog_revision": "sha256:...",
   "error": {
     "code": "AMBIGUOUS_SKILL",
     "message": "The logical skill name resolves to multiple trusted sources.",
@@ -119,6 +126,11 @@ Application-level failures should remain machine-readable tool results:
 }
 ```
 
+`catalog_revision` identifies the startup catalog/search snapshot. A loaded
+document's `content_sha256` identifies the exact bytes returned. Runtime catalog
+hot reload is not implemented; restart the server to refresh search metadata and
+the catalog revision.
+
 Initial error codes:
 
 - `INVALID_ARGUMENT`
@@ -126,7 +138,6 @@ Initial error codes:
 - `AMBIGUOUS_SKILL`
 - `INVALID_SKILL`
 - `UNSAFE_SOURCE`
-- `CATALOG_UNAVAILABLE`
 - `INTERNAL_ERROR`
 
 ## Client bootstrap contract

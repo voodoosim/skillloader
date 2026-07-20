@@ -58,12 +58,14 @@ contents.
 
 ### Cache
 
-The initial design uses an in-process metadata index and parsed-document cache.
-Entries are invalidated when source metadata or a content checksum changes.
+The prototype uses an in-process metadata index and document cache. Each load
+securely reads and hashes the current file bytes before using a cached document,
+so changed and removed files do not return stale content.
 Exact size and eviction policy remain benchmark decisions.
 
-The cache reduces repeated parsing and filesystem work. A cached document still
-costs model tokens when its content is returned to the model.
+The cache avoids repeated frontmatter validation, but it does not avoid the file
+read or SHA-256 calculation. Its latency effect is unmeasured. A cached document
+still costs model tokens when its content is returned to the model.
 
 ## Request sequence
 

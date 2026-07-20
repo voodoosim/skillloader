@@ -1,166 +1,200 @@
-# SkillLoader Product and Delivery Plan
+# SkillLoader 독립 프로젝트 계획
 
-## Product thesis
+## 1. 계획 기준
 
-SkillLoader keeps a large skill catalog outside an AI model's steady-state
-context. The model sees two small MCP tools, searches bounded metadata, and
-loads only the selected skill body.
+이 문서는 SkillLoader를 기존 Codex 설정 작업의 연장이 아닌 독립
+프로젝트로 새로 개발하기 위한 실행 계획이다.
 
-The product is valuable only if it proves all three outcomes together:
+- 최초 아이디어와 단계 구조는 `CODEX_PLAN_BASELINE.md`를 참고한다.
+- 기존 커밋의 Go 코드와 문서는 완료된 구현이 아니라 검토 가능한 참고
+  자산으로 취급한다.
+- 기존 계획의 완료 표시는 승계하지 않는다.
+- 코드 재사용 여부는 이 문서의 테스트와 검토를 통과한 뒤 결정한다.
+- 제품 주장, 호환성, 토큰 절감률, 성능 수치는 새 증거로만 인정한다.
 
-1. lower skill-catalog context overhead;
-2. routing and loaded-content behavior at least as reliable as the current
-   Python loader; and
-3. installation as one local binary without Docker.
+## 2. 프로젝트 목표
 
-Caching is a latency feature. It is not counted as a token-saving feature.
+하나의 Go 바이너리 `skillloader`가 신뢰된 로컬 루트의 스킬 목록을
+관리하고, 모델에는 다음 두 MCP 도구만 노출한다.
 
-## MVP objective
+- `search_skills`: 제한된 개수의 관련 스킬 메타데이터 검색
+- `load_skill`: 검색 결과의 논리 이름으로 전체 `SKILL.md` 로드
 
-Deliver one Go binary that serves the current 82-skill catalog over local stdio
-MCP using only `search_skills` and `load_skill`, works through one verified Codex
-bootstrap, matches frozen Python-loader behavior, and produces reproducible
-token, quality, and latency evidence.
+운영자 기능은 모델 컨텍스트와 분리해 CLI로 제공한다.
 
-## MVP scope
+- `skillloader list`
+- `skillloader doctor`
 
-### Included
+MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
+마켓플레이스, 임베딩 검색은 MVP 검증 이후로 미룬다.
 
-- Trusted local catalog roots
-- Existing `SKILL.md` metadata and complete-body loading
-- Deterministic, bounded metadata search
-- Exact load by logical skill name
-- In-memory metadata and parsed-document cache with invalidation
-- Two model-visible MCP tools over stdio
-- `skillloader list --json` and `skillloader doctor --json` for operators
-- One Codex bootstrap integration
-- Python parity fixtures and reproducible benchmarks
-- One-binary installation and smoke test outside the repository
+## 3. 제품 불변 조건
 
-### Deferred until the MVP gates pass
+- 전체 스킬 카탈로그를 모델의 상시 컨텍스트에 넣지 않는다.
+- 검색 결과 수는 항상 제한한다.
+- 클라이언트가 임의 파일 경로를 전달할 수 없게 한다.
+- 스킬은 논리 이름으로만 식별한다.
+- 파일 해석은 설정된 신뢰 루트 내부로 제한한다.
+- 루트 이탈, 경로 순회, 심볼릭 링크 이탈, 중복 이름을 거부한다.
+- 캐시는 지연시간 최적화로만 평가하며 토큰 절감 근거로 사용하지 않는다.
+- 오류에는 로컬 절대 경로, 환경값, 비밀정보를 포함하지 않는다.
+- 측정 자료가 없으면 토큰 절감·호환성·성능 완료를 주장하지 않는다.
 
-- Streamable HTTP and remote access
-- Docker image
-- Claude, OpenCode, and other client adapters
-- Web UI, hosted service, marketplace, and automatic skill downloads
-- Embeddings, vector databases, and semantic reranking
-- Cloud synchronization, accounts, telemetry, and billing
+## 4. 독립 프로젝트 작업 방식
 
-## Fixed design decisions
+### Git과 AI 협업
 
-| Surface | MVP decision | Reason |
+- `main`은 검증된 통합 커밋만 받는다.
+- 구현 AI마다 별도 worktree와 작업 브랜치를 사용한다.
+- 브랜치는 한 가지 변경 목적만 가진다.
+- 검토 요청에는 기준 커밋, 대상 커밋, 변경 파일, 검증 명령, 남은 문제를
+  `HANDOFF.md`에 기록한다.
+- 검토 AI는 대상 커밋을 기준으로 재현하고, 근거 없는 완료 표시를 승인하지
+  않는다.
+- 같은 파일을 여러 AI가 동시에 수정하지 않는다.
+- 병합 전 구현자 테스트와 독립 검토를 모두 통과한다.
+
+### 완료 판정
+
+항목은 다음 증거가 모두 있을 때만 `[x]`로 바꾼다.
+
+1. 구현 또는 문서 변경이 실제 파일에 존재한다.
+2. 해당 항목을 직접 검증하는 명령이나 테스트가 통과한다.
+3. `HANDOFF.md`에 실행 명령과 결과가 기록된다.
+4. 독립 검토에서 치명적·높음 등급 문제가 남지 않는다.
+
+## 5. 단계별 실행 계획
+
+### Gate 0 — 새 프로젝트 기준선
+
+- [ ] GitHub 소유자와 공개 Go 모듈 경로를 결정한다.
+- [ ] 라이선스를 결정하고 저장소에 추가한다.
+- [ ] Go 버전과 `GOPATH == GOROOT` 경고 처리 방침을 결정한다.
+- [ ] 기존 코드의 파일별 재사용·재작성·폐기 판단표를 작성한다.
+- [ ] MCP SDK 버전과 선택 근거를 기록한다.
+- [ ] 새 프로젝트 기준 커밋을 만들고 `main`을 깨끗하게 유지한다.
+
+종료 증거: 결정 기록, 코드 자산 감사표, 깨끗한 기준 커밋.
+
+### Gate 1 — 계약과 테스트 자료
+
+- [ ] `search_skills` 입력·출력·오류 스키마를 확정한다.
+- [ ] `load_skill` 입력·출력·오류 스키마를 확정한다.
+- [ ] `catalog_revision` 계산과 변경 규칙을 확정한다.
+- [ ] 신뢰 루트와 논리 이름 해석 규칙을 확정한다.
+- [ ] 정상, 무관 검색, 중복 이름, 루트 이탈, 심볼릭 링크 이탈,
+  파일 변경·삭제를 포함한 로컬 테스트 fixture를 만든다.
+- [ ] Python 기준 구현을 사용할 경우 고정 fixture와 비교 명령을 기록한다.
+- [ ] 실제 카탈로그 수는 fixture가 고정되기 전까지 목표 수치로 단정하지 않는다.
+
+종료 증거: 스키마 문서와 실패하는 인수 테스트가 함께 존재한다.
+
+### Gate 2 — 안전한 카탈로그 코어
+
+- [ ] 설정된 루트에서만 `SKILL.md`를 탐색한다.
+- [ ] frontmatter를 검증하고 안정된 메타데이터로 변환한다.
+- [ ] 중복 논리 이름을 거부한다.
+- [ ] 경로 순회와 루트 밖 심볼릭 링크를 거부한다.
+- [ ] 파일 내용을 읽은 현재 바이트 기준 SHA-256을 반환한다.
+- [ ] 파일 변경·삭제 시 오래된 캐시 결과를 반환하지 않는다.
+- [ ] 내부 오류에서 절대 경로와 운영체제 원문 오류를 제거한다.
+
+종료 증거: 안전성·변경·삭제 테스트, race 테스트, 독립 코드 검토.
+
+### Gate 3 — 제한된 검색
+
+- [ ] 검색 정규화와 점수 규칙을 문서화한다.
+- [ ] 점수가 0인 무관 결과를 제외한다.
+- [ ] 동일 입력에 항상 같은 순서를 반환한다.
+- [ ] 최대 결과 수를 강제한다.
+- [ ] 빈 질의와 결과 없음 동작을 계약과 일치시킨다.
+- [ ] 고정 질의 fixture로 순위 회귀 테스트를 만든다.
+
+종료 증거: 관련성·무관 결과·순서·제한 회귀 테스트.
+
+### Gate 4 — MCP와 운영자 CLI
+
+- [ ] stdio MCP에 `search_skills`, `load_skill`만 노출한다.
+- [ ] 성공 응답에 구조화 결과와 `catalog_revision`을 포함한다.
+- [ ] 실패 응답에 안정된 `code`, `message`, `retryable`을 포함한다.
+- [ ] MCP 오류 응답을 프로토콜 수준 통합 테스트로 검증한다.
+- [ ] `list --json`, `doctor --json`을 구현한다.
+- [ ] `help`, `--help`, `-h`가 유용한 설명과 종료 코드 0을 반환하게 한다.
+- [ ] 진단 출력에서 신뢰 루트의 절대 경로를 제거한다.
+
+종료 증거: in-memory MCP 테스트, stdio 스모크 테스트, CLI 종료 코드 테스트.
+
+### Gate 5 — 전체 검증과 Codex 통합
+
+- [ ] `gofmt` 결과가 깨끗하다.
+- [ ] `go test ./...`가 통과한다.
+- [ ] `go test -race ./...`가 통과한다.
+- [ ] `go vet ./...`가 통과한다.
+- [ ] `go build ./...`가 통과한다.
+- [ ] 저장소 밖 임시 디렉터리에서 바이너리 스모크 테스트를 실행한다.
+- [ ] Codex가 검색 후 정확히 한 스킬을 로드하고 전체 문서를 적용하는지
+  고정 통합 작업으로 검증한다.
+- [ ] 다른 AI가 같은 커밋에서 검증 명령을 독립 재실행한다.
+
+종료 증거: 정확한 명령, 종료 코드, 테스트 수, 대상 커밋이
+`HANDOFF.md`에 기록된다.
+
+### Gate 6 — 제품 근거
+
+- [ ] eager 등록과 SkillLoader를 같은 모델·작업·카탈로그 조건에서 비교한다.
+- [ ] 카탈로그 오버헤드, 라우팅 작업 오버헤드, 총 입력 토큰을 분리한다.
+- [ ] top-1, top-5, 오로드, 미로드 지표를 보고한다.
+- [ ] cold·warm 검색과 로드의 p50·p95를 재현 가능한 방식으로 측정한다.
+- [ ] 원시 입력과 기계 판독 결과를 저장소에 기록한다.
+- [ ] 공개 문구는 실제 측정 결과를 넘지 않는다.
+
+종료 증거: `docs/BENCHMARK.md`와 커밋된 결과 자료만으로 수치를 재현한다.
+
+### Gate 7 — 공개 릴리스
+
+- [ ] 지원 플랫폼별 재현 가능한 빌드를 만든다.
+- [ ] 설치, 설정, 업그레이드, 롤백을 문서화한다.
+- [ ] 릴리스 산출물로 clean-room 설치와 Codex 통합을 재검증한다.
+- [ ] 보안 제보 절차와 실제 검증된 호환성 표를 공개한다.
+
+종료 증거: 새 환경에서 소스 트리 없이 설치와 고정 워크플로를 완료한다.
+
+## 6. 다음 작업 묶음
+
+다음 순서로 현재 프로토타입을 독립 프로젝트 기준에 맞춘다.
+
+1. Gate 0의 소유자, 모듈 경로, 라이선스, Go 환경 결정을 받는다.
+2. 기존 Go 파일의 재사용 판단표를 완성한다.
+3. Python parity fixture와 허용 기준을 고정한다.
+4. 저장소 밖 stdio 스모크와 live Codex 통합을 검증한다.
+5. cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
+6. 검증 결과를 커밋한 뒤 독립 AI 검토를 요청한다.
+
+## 7. 중단 조건
+
+다음 조건에서는 범위를 늘리지 않고 해당 Gate로 돌아간다.
+
+- 호출자가 임의 경로를 지정할 수 있다.
+- 심볼릭 링크 이탈을 재현 테스트로 차단하지 못한다.
+- 계약과 실제 MCP 구조화 응답이 다르다.
+- 기존 코드의 존재만으로 완료 표시가 생긴다.
+- benchmark가 카탈로그 절감과 전체 토큰 절감을 분리하지 못한다.
+- Codex 통합 전에 HTTP, Docker, 두 번째 클라이언트가 범위에 추가된다.
+
+## 8. 결정 및 미결정 사항
+
+| 결정 | 필요한 시점 | 현재 상태 |
 |---|---|---|
-| Runtime | Go single binary | Local distribution without Python or Node runtime |
-| Transport | stdio only | Smallest local trust and deployment boundary |
-| MCP surface | `search_skills`, `load_skill` | Only model-required operations consume tool-schema context |
-| Operator surface | CLI `list`, `doctor` | Diagnostics do not belong in model context |
-| Identity | Logical skill name | Portable and prevents caller-controlled paths |
-| Search | Current deterministic ranking first | Establish parity before algorithm changes |
-| Cache | In-process metadata and parsed documents | Improve repeat latency without changing protocol output |
-| Claims | Benchmark-backed only | Prevent token and compatibility overstatement |
-
-## Acceptance gates
-
-### Gate 0 — Repository readiness
-
-- [x] Create the correctly spelled project and initialize local Git on `main`.
-- [x] Record architecture, protocol, benchmark, and contribution rules.
-- [ ] Confirm the GitHub owner and Go module path.
-- [ ] Select an open-source license.
-- [ ] Resolve or explicitly accept the observed `GOPATH == GOROOT` warning.
-- [x] Create the initial documentation commit before implementation changes.
-
-Exit evidence: clean documentation checks, selected module path and license, and
-a recorded decision on the Go environment warning.
-
-### Gate 1 — Core parity and safety
-
-- [x] Initialize `go.mod` and pin the official Go MCP SDK.
-- [ ] Add sanitized catalog and query fixtures from the Python loader.
-- [~] Parse and validate every skill in the frozen 82-skill catalog.
-- [ ] Match exact-load content and metadata for all 82 frozen skills.
-- [ ] Match Python search ordering for the frozen parity query set.
-- [x] Reject missing names, duplicate names, root escapes, and symlink escapes.
-- [x] Prove cache hit, update, removal, and invalidation behavior with tests.
-
-Exit evidence: exact test commands pass, `doctor` reports the expected frozen
-catalog counts, and no parity or path-safety case remains unresolved.
-
-### Gate 2 — Minimal product path
-
-- [x] Expose only `search_skills` and `load_skill` through stdio MCP.
-- [x] Add stable structured outputs and redacted error envelopes.
-- [x] Implement CLI `list --json`, `doctor --json`, and useful `--help` output.
-- [x] Build the binary and smoke-test it from outside the repository.
-- [ ] Verify one Codex bootstrap invokes search, loads one skill, and applies the
-  complete returned document on the labeled integration tasks.
-
-Exit evidence: the built binary completes protocol and external-directory smoke
-tests without Python, Node, Docker, or repository-relative paths.
-
-### Gate 3 — Product evidence
-
-- [ ] Compare eager registration and SkillLoader under identical client, model,
-  task, catalog, and sampling conditions.
-- [ ] Report steady-state catalog overhead, routed-task overhead, and total input
-  tokens separately.
-- [ ] Target at least 90% lower skill-catalog overhead; always publish the measured
-  result, but do not market a 90% claim if the result does not reach it.
-- [ ] Match or exceed Python-baseline top-1, top-5, incorrect-load, and no-load
-  results on the labeled task set.
-- [ ] Run at least 100 cold and 100 warm search/load iterations and report p50 and
-  p95 latency.
-- [ ] Require warm p95 search and load latency to beat the current Python
-  subprocess baseline on the same machine.
-- [ ] Commit machine-readable benchmark inputs and results.
-
-Exit evidence: `docs/BENCHMARK.md` can reproduce every public token, quality, and
-latency statement from committed result artifacts.
-
-### Gate 4 — First public release
-
-- [ ] Add reproducible release builds for explicitly tested platforms.
-- [ ] Document installation, configuration, upgrade, and rollback.
-- [ ] Complete a clean-room install and Codex integration test from the release
-  artifact.
-- [ ] Add security reporting guidance and enable private vulnerability reports.
-- [ ] Publish a release only with measured claims and an explicit compatibility
-  matrix.
-
-Exit evidence: a new machine or clean environment can install one artifact and
-complete the documented Codex workflow.
-
-## Stop conditions
-
-Stop expanding scope and revisit the design when any condition occurs:
-
-- Codex does not reliably apply the loaded skill body through the bootstrap.
-- The two-tool schema plus bootstrap fails to reduce catalog overhead.
-- Search or load parity cannot be reproduced from frozen fixtures.
-- Path containment depends on trusting caller-provided paths.
-- The benchmark cannot separate catalog-only savings from total request tokens.
-- HTTP, Docker, a second client, or semantic search is requested before Gate 3
-  evidence exists.
-
-## Post-MVP order
-
-Only after Gates 0–3 pass:
-
-1. verify a second MCP client with its own bootstrap and compatibility notes;
-2. design authenticated Streamable HTTP transport;
-3. add an optional Docker image;
-4. evaluate semantic ranking only against the labeled routing baseline; and
-5. consider registry, marketplace, UI, or hosted features from observed demand.
-
-## Open decisions
-
-| Decision | Required before | Current state |
-|---|---|---|
-| GitHub owner and Go module path | Gate 1 | User confirmation required |
-| License | Gate 1 | User confirmation required |
-| Go environment warning | Gate 1 | Effective `GOPATH` and `GOROOT` are identical |
-| Catalog root configuration format | Gate 2 | Design after core types exist |
-| Search result maximum | Gate 2 | Benchmark and context measurement required |
-| Cache size and eviction | Gate 3 | Benchmark required |
-| Second supported client | Post-MVP | Choose after Codex evidence |
-| HTTP authentication and listen policy | Post-MVP | No design before local MVP evidence |
+| GitHub 소유자와 Go 모듈 경로 | Gate 0 | 사용자 결정 필요 |
+| 라이선스 | Gate 0 | 사용자 결정 필요 |
+| Go 환경 경고 처리 | Gate 0 | 확인 필요 |
+| 기존 Go 코드 재사용 범위 | Gate 0 | 감사 필요 |
+| 카탈로그 root 설정 형식 | Gate 1 | 쉼표 구분 literal path; 상대경로는 cwd 기준 |
+| 검색 최대 결과 수 | Gate 1 | 요청 1~10, 범위 밖·생략 시 5 |
+| tags 없는 스킬 | Gate 1 | 허용하되 doctor warning |
+| YAML frontmatter 없는 legacy 문서 | Gate 1 | MVP에서 거부 |
+| 검색 토큰 문자 범위 | Gate 1 | 영문·숫자·한글·하이픈 |
+| 실행 중 카탈로그 변경 감지 | Gate 2 | 재시작 필요; hot reload 미구현 |
+| Python 기준 구현과 fixture 위치 | Gate 1 | 확인 필요 |
+| 캐시 용량과 eviction | Gate 6 | 측정 후 결정 |
+| 두 번째 MCP 클라이언트 | Gate 7 이후 | MVP 범위 밖 |

@@ -138,6 +138,13 @@ func TestSearchResultLimit(t *testing.T) {
 	}
 }
 
+func TestSearchNoMatchReturnsEmpty(t *testing.T) {
+	results := NewSearchEngine(buildTestIndex()).Search("zzzz-unrelated-query", 5)
+	if len(results) != 0 {
+		t.Fatalf("unrelated query returned %d results: %#v", len(results), results)
+	}
+}
+
 func TestSearchSerialization(t *testing.T) {
 	index := buildTestIndex()
 	engine := NewSearchEngine(index)
@@ -218,6 +225,48 @@ func TestParseFrontmatterMissingDelimiter(t *testing.T) {
 	}
 	if fm != nil {
 		t.Errorf("expected nil map on error, got %v", fm)
+	}
+}
+
+func TestParseFrontmatterYAMLListAndMultilineDescription(t *testing.T) {
+	input := `---
+name: yaml-skill
+description: >-
+  first line
+  second line
+tags:
+  - parser
+  - yaml
+---
+`
+	fm, err := parseFrontmatter(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fm["description"] != "first line second line" {
+		t.Fatalf("description = %q", fm["description"])
+	}
+	if fm["tags"] != "[parser, yaml]" {
+		t.Fatalf("tags = %q", fm["tags"])
+	}
+}
+
+func TestParseFrontmatterDoesNotTreatIndentedRuleAsDelimiter(t *testing.T) {
+	input := `---
+name: yaml-rule
+description: |-
+  first line
+  ---
+  last line
+tags: [yaml]
+---
+`
+	fm, err := parseFrontmatter(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fm["description"] != "first line\n---\nlast line" {
+		t.Fatalf("description = %q", fm["description"])
 	}
 }
 

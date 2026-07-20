@@ -1,7 +1,7 @@
 # Contributing
 
-SkillLoader is currently in its design and scaffold stage. Contributions should
-keep claims aligned with verified implementation evidence.
+SkillLoader is currently a local Go prototype. Contributions should keep claims
+aligned with verified implementation evidence.
 
 ## Before changing the project
 
@@ -22,9 +22,9 @@ rg -n "90%|implemented|supported|compatible" README.md HANDOFF.md plan.md docs
 Every performance or compatibility statement must link to reproducible local
 evidence or an authoritative external specification.
 
-## Future Go changes
+## Go changes
 
-Once `go.mod` exists, every code change should include exact commands for:
+Every code change should include exact commands for:
 
 - formatting;
 - build;
