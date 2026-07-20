@@ -69,7 +69,9 @@ func DiscoverSkills(roots []string) ([]string, error) {
 			}
 			return nil
 		})
-		_ = trustedRoot.Close()
+		if err := trustedRoot.Close(); err != nil {
+			return paths, err
+		}
 	}
 
 	sort.Strings(paths)
