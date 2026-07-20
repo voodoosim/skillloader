@@ -93,9 +93,9 @@ The `mcp schema contract` query is the only exact-ranking failure.
 - Go results: `contract-auditor`, then `api-guardian`
 
 The first result is equal. Go also matches `contract` in the `api-guardian`
-description (`OpenAPI contracts`), while the Python reference searches its tag
-index and logical names. This fixture records the difference; it does not change
-either ranking algorithm.
+description (`OpenAPI contracts`). The Python reference searches only its tag
+index and logical names, not descriptions. This fixture records the difference;
+it does not change either ranking algorithm.
 
 ## Boundaries
 

@@ -163,12 +163,12 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 
 다음 순서로 현재 프로토타입을 독립 프로젝트 기준에 맞춘다.
 
-1. 기존 Go 파일의 재사용 판단표를 완성한다.
-2. 중복 이름 처리 구현을 문서의 거부 정책과 다시 일치시킨다.
-3. Python parity fixture와 허용 기준을 고정한다.
-4. 저장소 밖 stdio 스모크와 live Codex 통합을 검증한다.
-5. cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
-6. 검증 결과를 커밋한 뒤 독립 AI 검토를 요청한다.
+1. [x] 기존 Go 파일의 재사용 판단표를 완성한다.
+2. [x] 중복 이름 처리 구현을 문서의 거부 정책과 다시 일치시킨다.
+3. [x] Python parity fixture와 허용 기준을 고정한다.
+4. [ ] 저장소 밖 stdio 스모크와 live Claude/Codex/OpenCode 통합을 검증한다.
+5. [x] synthetic cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
+6. [x] 검증 결과를 커밋한 뒤 독립 AI 검토를 요청한다.
 
 ## 7. 중단 조건
 

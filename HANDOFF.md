@@ -10,7 +10,7 @@ remaining gates belong in `plan.md` and `CODEX_PLAN_BASELINE.md`.
 | Surface | State | Evidence |
 |---|---|---|
 | Project root | `/home/vodo/workspace/projects/skillloader` | `git rev-parse --show-toplevel` |
-| Git | Branch `main`, latest integration merges `bee5ac7` and `27ecc12`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
+| Git | Branch `main`, latest snapshot fix `2cc21b5`, remote `origin` configured | `git branch --show-current`, `git log --oneline`, `git remote` |
 | Runtime | Project-selected Go `1.26.5` on `linux/amd64`; `go 1.26.5` also implies the same preferred toolchain | `go.mod`, `GODEBUG=toolchaintrace=1 go version` |
 | Go environment | `GOTOOLCHAIN=auto` selects the module toolchain under the module cache; project commands no longer use the host's overlapping `GOPATH`/`GOROOT` | `go env GOVERSION GOTOOLCHAIN GOROOT GOPATH` |
 | Implementation | Local Go prototype with catalog, YAML frontmatter parsing, search, duplicate-name rejection, trusted-root load, cache, two typed MCP tools, and operator CLI | source tree and tests |
@@ -43,7 +43,8 @@ diagnostic. `skill_count`,
 - Keep search weights deterministic but provisional until fixture-based tuning.
 - Return no results for zero-score queries.
 - Read and hash current file bytes on every load; use the document cache only
-  after checksum verification. Cache latency remains unmeasured.
+  after checksum verification. Synthetic core timing is recorded; real-catalog
+  and client latency remain unmeasured.
 - Enforce trusted-root containment with `os.Root` and reject direct and symlink
   escapes.
 - Return typed MCP structured output with `catalog_revision` and stable redacted
@@ -62,7 +63,7 @@ diagnostic. `skill_count`,
 go mod tidy                                pass
 go mod verify                              pass
 gofmt -d *.go                              clean
-go test -count=1 ./...                     pass (38 top-level test functions)
+go test -count=1 ./...                     pass (56 tests)
 go test -race -count=1 ./...               pass
 go vet ./...                               pass
 go build ./...                             pass
@@ -80,14 +81,14 @@ cleanup; project commands use the automatically selected Go `1.26.5` toolchain.
 ## Exact unverified items
 
 - Host-level `GOPATH == GOROOT` cleanup outside the module toolchain
-- Live Codex bootstrap behavior and end-to-end skill application
+- Live Claude/Codex/OpenCode bootstrap behavior and end-to-end skill application
 - Token overhead and total-request token measurements
 - Real-catalog benchmark evidence beyond the committed synthetic fixture
 - Catalog hot reload, Docker, HTTP, release packaging, and platform compatibility
 
 ## Next review slice
 
-1. Run the temporary OpenCode MCP bootstrap without changing user credentials
+1. Run temporary Claude, Codex, and OpenCode MCP bootstraps without changing user credentials
    or global configuration.
 2. Verify the live client performs search, one selected load, and full document
    application.
