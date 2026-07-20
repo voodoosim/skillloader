@@ -1,4 +1,4 @@
-module skillloader
+module github.com/voodoosim/skillloader
 
 go 1.25.0
 
