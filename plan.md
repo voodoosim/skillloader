@@ -172,7 +172,7 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 - [ ] top-1, top-5, 오로드, 미로드 지표를 보고한다.
 - [x] synthetic fixture에서 cold·warm 검색과 로드의 p50·p95를 재현 가능한 방식으로 측정한다.
 - [ ] 원시 입력과 기계 판독 결과를 저장소에 기록한다.
-- [ ] 공개 문구는 실제 측정 결과를 넘지 않는다.
+- [x] 공개 문구는 실제 측정 결과를 넘지 않는다.
 
 종료 증거: `docs/BENCHMARK.md`와 커밋된 결과 자료만으로 수치를 재현한다.
 
