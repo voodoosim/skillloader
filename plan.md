@@ -67,11 +67,11 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 
 ### Gate 0 — 새 프로젝트 기준선
 
-- [ ] GitHub 소유자와 공개 Go 모듈 경로를 결정한다.
-- [ ] 라이선스를 결정하고 저장소에 추가한다.
-- [ ] Go 버전과 `GOPATH == GOROOT` 경고 처리 방침을 결정한다.
+- [x] GitHub 소유자와 공개 Go 모듈 경로를 결정한다.
+- [x] 라이선스를 결정하고 저장소에 추가한다.
+- [x] Go 버전과 `GOPATH == GOROOT` 경고 처리 방침을 결정한다.
 - [ ] 기존 코드의 파일별 재사용·재작성·폐기 판단표를 작성한다.
-- [ ] MCP SDK 버전과 선택 근거를 기록한다.
+- [x] MCP SDK 버전과 선택 근거를 기록한다.
 - [ ] 새 프로젝트 기준 커밋을 만들고 `main`을 깨끗하게 유지한다.
 
 종료 증거: 결정 기록, 코드 자산 감사표, 깨끗한 기준 커밋.
@@ -163,8 +163,8 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 
 다음 순서로 현재 프로토타입을 독립 프로젝트 기준에 맞춘다.
 
-1. Gate 0의 소유자, 모듈 경로, 라이선스, Go 환경 결정을 받는다.
-2. 기존 Go 파일의 재사용 판단표를 완성한다.
+1. 기존 Go 파일의 재사용 판단표를 완성한다.
+2. 중복 이름 처리 구현을 문서의 거부 정책과 다시 일치시킨다.
 3. Python parity fixture와 허용 기준을 고정한다.
 4. 저장소 밖 stdio 스모크와 live Codex 통합을 검증한다.
 5. cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
@@ -185,9 +185,10 @@ MVP는 로컬 stdio 전송만 지원한다. HTTP, Docker, 원격 카탈로그,
 
 | 결정 | 필요한 시점 | 현재 상태 |
 |---|---|---|
-| GitHub 소유자와 Go 모듈 경로 | Gate 0 | 사용자 결정 필요 |
-| 라이선스 | Gate 0 | 사용자 결정 필요 |
-| Go 환경 경고 처리 | Gate 0 | 확인 필요 |
+| GitHub 소유자와 Go 모듈 경로 | Gate 0 | `voodoosim`, `github.com/voodoosim/skillloader` |
+| 라이선스 | Gate 0 | MIT |
+| Go 버전과 환경 | Gate 0 | `go 1.26.5`; 동일 버전의 암묵적 toolchain과 `GOTOOLCHAIN=auto` 사용 |
+| MCP SDK | Gate 0 | 공식 Go SDK `v1.6.1`; 알려진 `v1.2.0` 경보 제거 |
 | 기존 Go 코드 재사용 범위 | Gate 0 | 감사 필요 |
 | 카탈로그 root 설정 형식 | Gate 1 | 쉼표 구분 literal path; 상대경로는 cwd 기준 |
 | 검색 최대 결과 수 | Gate 1 | 요청 1~10, 범위 밖·생략 시 5 |

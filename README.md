@@ -57,6 +57,7 @@ The implemented request and response shapes are defined in
 
 ## Current local interface
 
+- Required Go toolchain: `1.26.5` or newer
 - One Go binary named `skillloader`
 - MCP over stdio for local clients
 - Two model-visible MCP tools
@@ -102,4 +103,4 @@ before publishing a numerical claim.
 
 ## License
 
-Not selected yet. A license must be chosen before public release.
+MIT. See [LICENSE](LICENSE).

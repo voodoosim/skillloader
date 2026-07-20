@@ -30,7 +30,19 @@ Every code change should include exact commands for:
 - build;
 - unit and integration tests;
 - race detection where concurrent cache behavior is involved; and
+- module checksum verification and `govulncheck`; and
 - a built-binary smoke test from outside the repository.
+
+For dependency or toolchain changes, run at minimum:
+
+```bash
+go mod verify
+go vet ./...
+go test -count=1 ./...
+go test -race -count=1 ./...
+go build ./...
+go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+```
 
 Do not document a command as working until it has been executed successfully in
 the current tree.
