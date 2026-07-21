@@ -57,6 +57,20 @@ Body content here.
 	}
 }
 
+func TestLoaderLoadByNamespaceSuffix(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "SKILL.md")
+	content := "---\nname: plugin:demo\ndescription: demo\n---\nbody\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	loader := NewSkillLoader([]SkillEntry{{Name: "plugin:demo", Path: path}}, []string{tmp}, NewCache())
+	result, err := loader.Load("demo")
+	if err != nil || result.Name != "plugin:demo" {
+		t.Fatalf("namespace suffix lookup failed: result=%+v err=%v", result, err)
+	}
+}
+
 func TestLoaderNotFound(t *testing.T) {
 	loader := NewSkillLoader(nil, nil, NewCache())
 	_, err := loader.Load("nonexistent")

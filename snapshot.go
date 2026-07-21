@@ -195,14 +195,6 @@ func fingerprintPaths(paths []string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func dirFingerprint(roots []string) (string, error) {
-	paths, err := DiscoverSkills(roots)
-	if err != nil {
-		return "", err
-	}
-	return fingerprintPaths(paths), nil
-}
-
 func entryWithinRoots(normalizedRoots []string, path string) bool {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
