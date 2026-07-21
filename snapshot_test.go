@@ -276,3 +276,18 @@ func TestTryLoadIndexFallbackToBuild(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadSnapshotRejectsCorruptGob(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", tmp)
+	path, err := snapshotPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("corrupt"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := loadSnapshot([]string{tmp}); ok {
+		t.Fatal("corrupt snapshot accepted")
+	}
+}

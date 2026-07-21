@@ -192,7 +192,7 @@ func readTrustedFile(roots []string, path string) ([]byte, error) {
 			if errors.Is(err, os.ErrNotExist) {
 				return nil, errUnreadableSkill
 			}
-			return nil, errOutsideTrustedRoots
+			return nil, errUnreadableSkill
 		}
 		if !pathWithinRoot(resolvedRoot, resolvedPath) {
 			return nil, errOutsideTrustedRoots
