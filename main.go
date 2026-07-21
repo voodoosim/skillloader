@@ -44,9 +44,9 @@ func runServer() error {
 }
 
 type SearchOutput struct {
-	Query           string        `json:"query"`
-	Limit           int           `json:"limit"`
-	Matches         []SearchMatch `json:"matches"`
+	Query           string        `json:"query,omitempty"`
+	Limit           int           `json:"limit,omitempty"`
+	Matches         []SearchMatch `json:"matches,omitempty"`
 	CatalogRevision string        `json:"catalog_revision"`
 	QueryHash       string        `json:"query_hash"`
 	Cached          bool          `json:"cached"`
