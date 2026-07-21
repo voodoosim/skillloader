@@ -204,6 +204,14 @@ func TestSafetyFilterRejectsNonPositiveAndMissingPath(t *testing.T) {
 	}
 }
 
+func TestSearchTieBreaksByName(t *testing.T) {
+	index := []SkillEntry{{Name: "zeta", Description: "same", Path: "/z"}, {Name: "alpha", Description: "same", Path: "/a"}}
+	results := NewSearchEngine(index).Search("same", 2)
+	if len(results) != 2 || results[0].Name != "alpha" || results[1].Name != "zeta" {
+		t.Fatalf("unexpected tie order: %+v", results)
+	}
+}
+
 func TestParseFrontmatterValid(t *testing.T) {
 	input := `---
 name: test-skill

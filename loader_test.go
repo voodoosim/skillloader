@@ -71,6 +71,19 @@ func TestLoaderLoadByNamespaceSuffix(t *testing.T) {
 	}
 }
 
+func TestCacheInvalidateDocumentAndIndexHash(t *testing.T) {
+	c := NewCache()
+	c.SetDocument("/tmp/x", "body", "sum")
+	c.InvalidateDocument("/tmp/x")
+	if _, ok := c.GetDocument("/tmp/x", "sum"); ok {
+		t.Fatal("document should be invalidated")
+	}
+	c.StoreIndex([]SkillEntry{{Name: "x"}})
+	if c.IndexHash() == "" {
+		t.Fatal("index hash should be set")
+	}
+}
+
 func TestLoaderNotFound(t *testing.T) {
 	loader := NewSkillLoader(nil, nil, NewCache())
 	_, err := loader.Load("nonexistent")
