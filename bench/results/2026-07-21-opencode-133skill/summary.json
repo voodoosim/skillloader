@@ -1,0 +1,48 @@
+{
+  "date": "2026-07-21",
+  "client": "opencode",
+  "catalog": "133-real-skills",
+  "catalog_size": 133,
+  "token_method": "tiktoken cl100k_base",
+  "measurements": {
+    "eager_registration": {
+      "total_skills": 133,
+      "avg_description_chars": 278,
+      "xml_format_tokens_cl100k": 11930
+    },
+    "skillloader_system_overhead": {
+      "tool_definitions": 2,
+      "tool_def_tokens_cl100k": 44
+    },
+    "per_task_cost": {
+      "search_5_results_tokens_cl100k": 1000,
+      "load_skill_total_tokens_cl100k": 2674,
+      "load_skill_content_only_tokens_cl100k": 2514,
+      "total_per_task_tokens_cl100k": 3674
+    },
+    "reductions": {
+      "catalog_overhead_percent": 100,
+      "per_task_vs_eager_percent": 69,
+      "break_even_tasks": 3
+    }
+  },
+  "core_timing": {
+    "cold_search_p50_ns": 3727895,
+    "cold_search_p95_ns": 4321799,
+    "cold_load_p50_ns": 30750,
+    "cold_load_p95_ns": 96726,
+    "warm_search_p50_ns": 24743,
+    "warm_search_p95_ns": 39467,
+    "warm_load_p50_ns": 16962,
+    "warm_load_p95_ns": 21239
+  },
+  "go_benchmarks": {
+    "cold_build_mean_ns": 1701269,
+    "warm_snapshot_mean_ns": 1872756
+  },
+  "limitations": [
+    "MCP transport overhead not measured",
+    "Live Claude/Codex client overhead not measured",
+    "Tool call request tokens not included (only results measured)"
+  ]
+}
