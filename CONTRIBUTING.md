@@ -5,7 +5,7 @@ aligned with verified implementation evidence.
 
 ## Before changing the project
 
-1. Read `HANDOFF.md`, `plan.md`, and the relevant document under `docs/`.
+1. Read the relevant document under `docs/` and inspect the current source.
 2. Run `git status --short` and preserve unrelated changes.
 3. State whether the change affects protocol, trust boundaries, token metrics,
    or client compatibility.
@@ -16,7 +16,7 @@ Run:
 
 ```bash
 git diff --check
-rg -n "90%|implemented|supported|compatible" README.md HANDOFF.md plan.md docs
+rg -n "90%|implemented|supported|compatible" README.md docs
 ```
 
 Every performance or compatibility statement must link to reproducible local

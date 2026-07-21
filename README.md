@@ -96,8 +96,6 @@ large-catalog break-even point; see [docs/BENCHMARK.md](docs/BENCHMARK.md) and
 
 ## Project documents
 
-- [HANDOFF.md](HANDOFF.md) — current project state
-- [plan.md](plan.md) — implementation sequence and open decisions
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — components and trust boundaries
 - [docs/MCP_CONTRACT.md](docs/MCP_CONTRACT.md) — current prototype interface
 - [docs/DEPENDENCY_REVIEW.md](docs/DEPENDENCY_REVIEW.md) — transitive module paths and security checks
