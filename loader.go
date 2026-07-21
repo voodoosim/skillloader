@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto/sha256"
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -65,7 +63,7 @@ func (l *SkillLoader) Load(name string) (*LoadResult, error) {
 		}
 		return nil, skillError("INVALID_SKILL", "The selected skill document cannot be read.")
 	}
-	checksum := fmt.Sprintf("%x", sha256.Sum256(data))
+	checksum := hexSHA256(data)
 
 	if cached, ok := l.cache.GetDocument(path, checksum); ok {
 		return &LoadResult{

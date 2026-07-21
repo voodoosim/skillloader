@@ -69,15 +69,19 @@ func loadSnapshot(roots []string) ([]SkillEntry, []string, bool) {
 		}
 	}
 
-	currentFP, err := dirFingerprint(roots)
-	if err != nil || currentFP != snap.DirFingerprint {
+	currentPaths, err := DiscoverSkills(roots)
+	if err != nil {
+		return nil, nil, false
+	}
+	if len(currentPaths) != len(snap.FileTimes) {
 		return nil, nil, false
 	}
 
-	currentPaths, err := DiscoverSkills(roots)
-	if err != nil || len(currentPaths) != len(snap.FileTimes) {
+	currentFP := fingerprintPaths(currentPaths)
+	if currentFP != snap.DirFingerprint {
 		return nil, nil, false
 	}
+
 	for _, path := range currentPaths {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -85,9 +89,6 @@ func loadSnapshot(roots []string) ([]SkillEntry, []string, bool) {
 		}
 		stored, ok := snap.FileTimes[path]
 		if !ok || !info.ModTime().Equal(stored) {
-			return nil, nil, false
-		}
-		if fileChecksum(roots, path) != snap.FileChecksums[path] {
 			return nil, nil, false
 		}
 	}
@@ -105,7 +106,7 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 	}
 
 	r := normalizeRoots(roots)
-	fp, err := dirFingerprint(roots)
+	paths, err := DiscoverSkills(roots)
 	if err != nil {
 		return err
 	}
@@ -116,16 +117,11 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 		FileChecksums:   make(map[string]string),
 		NormalizedRoots: r,
 		RootsHash:       hashRoots(r),
-		DirFingerprint:  fp,
+		DirFingerprint:  fingerprintPaths(paths),
 		Errors:          make([]string, len(errs)),
 		BuiltAt:         time.Now(),
 	}
 	copy(snap.Errors, errs)
-
-	paths, err := DiscoverSkills(roots)
-	if err != nil {
-		return err
-	}
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -189,17 +185,21 @@ func hashRoots(roots []string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func dirFingerprint(roots []string) (string, error) {
-	paths, err := DiscoverSkills(roots)
-	if err != nil {
-		return "", err
-	}
+func fingerprintPaths(paths []string) string {
 	h := sha256.New()
 	for _, p := range paths {
 		h.Write([]byte(p))
 		h.Write([]byte{0})
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func dirFingerprint(roots []string) (string, error) {
+	paths, err := DiscoverSkills(roots)
+	if err != nil {
+		return "", err
+	}
+	return fingerprintPaths(paths), nil
 }
 
 func entryWithinRoots(normalizedRoots []string, path string) bool {
@@ -231,6 +231,5 @@ func fileChecksum(roots []string, path string) string {
 	if err != nil {
 		return ""
 	}
-	h := sha256.Sum256(data)
-	return fmt.Sprintf("%x", h[:])
+	return hexSHA256(data)
 }

@@ -87,8 +87,12 @@ func ParseSkill(path string, roots []string) (SkillEntry, error) {
 	return parseSkillData(path, data)
 }
 
+func hexSHA256(data []byte) string {
+	return fmt.Sprintf("%x", sha256.Sum256(data))
+}
+
 func parseSkillData(path string, data []byte) (SkillEntry, error) {
-	hash := fmt.Sprintf("%x", sha256.Sum256(data))
+	hash := hexSHA256(data)
 	fm, err := parseFrontmatter(string(data))
 	if err != nil {
 		return SkillEntry{}, fmt.Errorf("invalid frontmatter: %w", err)

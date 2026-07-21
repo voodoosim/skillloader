@@ -174,15 +174,8 @@ func TestSnapshotInvalidatesWhenInvalidFileBecomesValid(t *testing.T) {
 	if err := saveSnapshot(entries, errs, []string{root}); err != nil {
 		t.Fatal(err)
 	}
-	info, err := os.Stat(path)
-	if err != nil {
-		t.Fatal(err)
-	}
 	valid := "---\nname: changing\ndescription: now valid\ntags: [test]\n---\n# Valid\n"
 	if err := os.WriteFile(path, []byte(valid), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chtimes(path, info.ModTime(), info.ModTime()); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, ok := loadSnapshot([]string{root}); ok {

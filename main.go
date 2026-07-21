@@ -227,7 +227,7 @@ func getRoots() []string {
 func splitCSV(s string) []string {
 	var parts []string
 	for _, p := range splitSimple(s, ',') {
-		p = trimSpace(p)
+		p = strings.TrimSpace(p)
 		if p != "" {
 			parts = append(parts, p)
 		}
@@ -246,15 +246,4 @@ func splitSimple(s string, sep rune) []string {
 	}
 	parts = append(parts, s[start:])
 	return parts
-}
-
-func trimSpace(s string) string {
-	start, end := 0, len(s)
-	for start < end && (s[start] == ' ' || s[start] == '\t') {
-		start++
-	}
-	for end > start && (s[end-1] == ' ' || s[end-1] == '\t') {
-		end--
-	}
-	return s[start:end]
 }
