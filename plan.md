@@ -178,12 +178,21 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 
 ### Gate 7 — 공개 릴리스
 
-- [ ] 지원 플랫폼별 재현 가능한 빌드를 만든다.
-- [ ] 설치, 설정, 업그레이드, 롤백을 문서화한다.
+- [x] 지원 플랫폼별 재현 가능한 빌드를 만든다.
+- [x] 설치, 설정, 업그레이드, 롤백을 문서화한다.
 - [ ] 릴리스 산출물로 clean-room 설치와 Codex 통합을 재검증한다.
 - [ ] 보안 제보 절차와 실제 검증된 호환성 표를 공개한다.
 
 종료 증거: 새 환경에서 소스 트리 없이 설치와 고정 워크플로를 완료한다.
+
+**현재 증거**: `scripts/build.sh` (재현 빌드), `INSTALL.md` (설치·설정·제거), `docs/MCP_CONTRACT.md` (MCP 도구 스키마)
+
+**릴리스 체크리스트** (v0.2.0):
+- [ ] `git tag v0.2.0` + push
+- [ ] `./scripts/build.sh v0.2.0` 실행, `dist/skillloader` 무결성 확인
+- [ ] `go install github.com/voodoosim/skillloader@v0.2.0` fresh 머신 검증
+- [ ] GitHub 릴리스 페이지에 binary + 체크섬 게시
+- [ ] `go doc github.com/voodoosim/skillloader` 링크 동작 확인
 
 ## 6. 다음 작업 묶음
 
@@ -222,6 +231,6 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 | YAML frontmatter 없는 legacy 문서 | Gate 1 | MVP에서 거부 |
 | 검색 토큰 문자 범위 | Gate 1 | 영문·숫자·한글·하이픈 |
 | 실행 중 카탈로그 변경 감지 | Gate 2 | 재시작 필요; hot reload 미구현 |
-| Python 기준 구현과 fixture 위치 | Gate 1 | 확인 필요 |
+| Python 기준 구현과 fixture 위치 | Gate 1 | `scripts/verify_parity.py`, `testdata/parity/` (10/10 통과) |
 | 캐시 용량과 eviction | Gate 6 | 측정 후 결정 |
-| 두 번째 MCP 클라이언트 | Gate 7 이후 | MVP 범위 밖 |
+| 두 번째 MCP 클라이언트 | Gate 7 이후 | MVP 범위 밖; OpenCode(stdio)·Codex(stdio)·Claude(stdio) 호환 |
