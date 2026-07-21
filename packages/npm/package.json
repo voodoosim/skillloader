@@ -4,6 +4,7 @@
   "description": "SkillLoader MCP launcher",
   "license": "MIT",
   "bin": { "skillloader": "bin/skillloader.js" },
+  "scripts": { "postinstall": "node bin/install.js" },
   "files": ["bin"],
   "engines": { "node": ">=18" }
 }
