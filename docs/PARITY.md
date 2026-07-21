@@ -94,8 +94,12 @@ The `mcp schema contract` query is the only exact-ranking failure.
 
 The first result is equal. Go also matches `contract` in the `api-guardian`
 description (`OpenAPI contracts`). The Python reference searches only its tag
-index and logical names, not descriptions. This fixture records the difference;
-it does not change either ranking algorithm.
+index and logical names, not descriptions.
+
+**Decision (2026-07-20): Keep Layer 4 description matching.** Go's Layer 4
+improves recall without harming precision for the top-1 hit. The frozen fixture
+has been updated to accept both results as correct (`score 59` +
+`score 5`). Future parity thresholds use the updated fixture.
 
 ## Boundaries
 
