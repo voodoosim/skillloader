@@ -22,7 +22,6 @@ type catalogSnapshot struct {
 	Entries         []SkillEntry
 	FileTimes       map[string]time.Time
 	FileSizes       map[string]int64
-	FileChecksums   map[string]string
 	NormalizedRoots []string
 	RootsHash       string
 	DirFingerprint  string
@@ -117,7 +116,6 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 		Entries:         copyEntries(entries),
 		FileTimes:       make(map[string]time.Time, len(entries)),
 		FileSizes:       make(map[string]int64, len(entries)),
-		FileChecksums:   make(map[string]string),
 		NormalizedRoots: r,
 		RootsHash:       hashRoots(r),
 		DirFingerprint:  fingerprintPaths(paths),
@@ -132,7 +130,6 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 		}
 		snap.FileTimes[path] = info.ModTime()
 		snap.FileSizes[path] = info.Size()
-		snap.FileChecksums[path] = fileChecksum(roots, path)
 	}
 
 	tmp, err := os.CreateTemp(filepath.Dir(path), ".catalog.gob-*")
@@ -228,12 +225,4 @@ func copyEntries(src []SkillEntry) []SkillEntry {
 	out := make([]SkillEntry, len(src))
 	copy(out, src)
 	return out
-}
-
-func fileChecksum(roots []string, path string) string {
-	data, err := readTrustedFile(roots, path)
-	if err != nil {
-		return ""
-	}
-	return hexSHA256(data)
 }
