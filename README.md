@@ -68,10 +68,10 @@ go install github.com/voodoosim/skillloader@latest
 Node.js users can install the published npm launcher:
 
 ```bash
-npx @voodoosim/skillloader@0.1.1
+npx skillloader-mcp@0.1.4
 ```
 
-Package page: [@voodoosim/skillloader on npm](https://www.npmjs.com/package/@voodoosim/skillloader)
+Package page: [skillloader-mcp on npm](https://www.npmjs.com/package/skillloader-mcp)
 
 Unix users can use the user-local installer, and Codex users can register the
 stdio MCP server in the same command. Client-specific instructions and pinned
