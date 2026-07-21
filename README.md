@@ -59,6 +59,16 @@ The implemented request and response shapes are defined in
 
 ## Current local interface
 
+Install with one command:
+
+```bash
+go install github.com/voodoosim/skillloader@latest
+```
+
+Unix users can use the user-local installer, and Codex users can register the
+stdio MCP server in the same command. Client-specific instructions and pinned
+release assets are documented in [INSTALL.md](INSTALL.md).
+
 - Required Go toolchain: `1.26.5` or newer
 - One Go binary named `skillloader`
 - MCP over stdio for local clients

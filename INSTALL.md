@@ -5,7 +5,7 @@
 - Go 1.26.5 or newer
 - `git` (if installing from source)
 
-## From source (go install)
+## Recommended one-line install
 
 ```bash
 go install github.com/voodoosim/skillloader@latest
@@ -14,7 +14,8 @@ go install github.com/voodoosim/skillloader@latest
 This downloads and builds the binary into `$GOPATH/bin/skillloader` (default
 `~/go/bin/`).
 
-## One-line user-local install
+The command above is the simplest reproducible Go-native install. For a user-local
+Unix install that also places the binary in `~/.local/bin`:
 
 On Unix-like systems with Go 1.26.5 or newer:
 
@@ -29,9 +30,11 @@ and does not modify client configuration. To register Codex explicitly:
 curl -fsSL https://raw.githubusercontent.com/voodoosim/skillloader/main/scripts/install.sh | sh -s -- --configure-codex
 ```
 
-This URL becomes usable only after the repository and module are publicly
-readable and `scripts/install.sh` is committed to `main`. The installer is
-Unix-only; Windows and release binaries remain separate packaging work.
+The installer is Unix-only. Windows users should use the `.exe` asset from the
+[latest release](https://github.com/voodoosim/skillloader/releases/latest).
+
+Releases are retained for pinned versions, offline installation, and checksum
+review; they are not required for the normal one-line install path.
 
 For a local checkout, install without network access:
 
@@ -59,6 +62,10 @@ Expected: `skills` > 0, `error_count` < 10 (legacy documents without YAML
 frontmatter are rejected by design).
 
 ## Configure for OpenCode / Codex
+
+Codex can be registered during installation with `--configure-codex` above.
+Other MCP clients use the same local stdio command; copy the JSON below into
+the client's MCP configuration.
 
 Add to `~/.config/opencode/opencode.json` (or equivalent):
 
