@@ -66,8 +66,9 @@ The implemented request and response shapes are defined in
 - Stable JSON output for direct CLI diagnostics
 
 Live Codex CLI `0.144.6` bootstrap is verified on the versioned 10-skill routing
-fixture in an isolated temporary Codex environment. Claude Code and OpenCode
-remain unverified; see
+fixture in an isolated temporary Codex environment. OpenCode `1.18.4` has also
+completed a live local search/load and warm-cache check; Claude Code remains
+unverified. See
 [docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for registration and
 isolated verification commands.
 

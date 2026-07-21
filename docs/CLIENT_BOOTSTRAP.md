@@ -102,5 +102,6 @@ and complete loaded document before claiming live compatibility.
 
 The Codex CLI `0.144.6` live evidence meeting those requirements is recorded in
 `bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` and
-`docs/PRODUCT_EVIDENCE.md`. It does not establish Claude Code or OpenCode
-compatibility.
+`docs/PRODUCT_EVIDENCE.md`. OpenCode `1.18.4` was also verified in the current
+environment for local search/load and warm-cache reuse. This does not establish
+Claude Code compatibility or cross-platform OpenCode behavior.

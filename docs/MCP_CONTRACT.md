@@ -4,8 +4,9 @@ This document defines the current local prototype interface. In-memory protocol
 tests cover tool discovery, typed output schemas, structured success results,
 redacted structured errors, and the TextContent compatibility copy. Live Codex
 CLI `0.144.6` compatibility is verified for the versioned 10-skill routing
-fixture in an isolated temporary Codex environment; Claude Code and OpenCode
-remain unverified.
+fixture in an isolated temporary Codex environment. OpenCode `1.18.4` has also
+completed a live local search/load and warm-cache check; Claude Code remains
+unverified.
 
 ## Design rules
 

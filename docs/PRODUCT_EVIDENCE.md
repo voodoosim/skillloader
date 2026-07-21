@@ -139,6 +139,6 @@ This evidence does not establish:
 - task-completion quality beyond routing and final-instruction extraction;
 - statistical stability beyond one run per task and mode;
 - a real-catalog or large-catalog break-even point;
-- Claude Code or OpenCode compatibility;
+- Claude Code compatibility or cross-platform OpenCode behavior;
 - provider-exact tokenization of the offline static layers;
 - release-artifact or clean-room installation compatibility.
