@@ -6,6 +6,7 @@ set -eu
 INSTALL_DIR=${SKILLLOADER_INSTALL_DIR:-"${HOME}/.local/bin"}
 ROOTS=${SKILLLOADER_ROOTS:-"${HOME}/.codex/skills,${HOME}/.codex/disabled-skills,${HOME}/.agents/skills,${HOME}/.claude/skills"}
 MODULE=${SKILLLOADER_MODULE:-github.com/voodoosim/skillloader}
+VERSION=${SKILLLOADER_VERSION:-latest}
 SOURCE_DIR=${SKILLLOADER_SOURCE_DIR:-}
 
 usage() {
@@ -35,7 +36,7 @@ mkdir -p "$INSTALL_DIR"
 if [ -n "$SOURCE_DIR" ]; then
     go build -trimpath -o "$INSTALL_DIR/skillloader" "$SOURCE_DIR"
 else
-    GOBIN="$INSTALL_DIR" go install "${MODULE}@latest"
+    GOBIN="$INSTALL_DIR" go install "${MODULE}@${VERSION}"
 fi
 binary="$INSTALL_DIR/skillloader"
 test -x "$binary"

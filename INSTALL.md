@@ -11,6 +11,12 @@
 go install github.com/voodoosim/skillloader@latest
 ```
 
+Pin a specific published version by replacing `latest`, for example:
+
+```bash
+go install github.com/voodoosim/skillloader@v0.1.1
+```
+
 This downloads and builds the binary into `$GOPATH/bin/skillloader` (default
 `~/go/bin/`).
 
@@ -21,6 +27,12 @@ On Unix-like systems with Go 1.26.5 or newer:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/voodoosim/skillloader/main/scripts/install.sh | sh
+```
+
+The installer defaults to `latest`; pin a version with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/voodoosim/skillloader/main/scripts/install.sh | SKILLLOADER_VERSION=v0.1.1 sh
 ```
 
 The script installs to `~/.local/bin/skillloader`, verifies `skillloader help`,
