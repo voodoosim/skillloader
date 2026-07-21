@@ -3,6 +3,7 @@
   "version": "0.1.1",
   "description": "SkillLoader MCP launcher",
   "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/voodoosim/skillloader.git", "directory": "packages/npm" },
   "bin": { "skillloader": "bin/skillloader.js" },
   "scripts": { "postinstall": "node bin/install.js" },
   "files": ["bin"],
