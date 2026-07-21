@@ -9,7 +9,7 @@
 모르는 값은 추측하지 말고 `확인 필요`로 남긴다. 작업 결과는 같은 문서의
 “완료 후” 요구사항에 맞춰 짧게 보고한다.
 
-현재 작업 브랜치: `codex/gate6-evidence`
+현재 작업 브랜치: `main` at `782d2b3`; Gate 6 증거 변경은 아직 미커밋
 
 `docs/HANDOFF_GATE6.md`를 기준으로 Gate 6을 계속 진행해줘.
 
@@ -17,9 +17,12 @@
 
 - 합성 fixture의 Go cold/warm 성능 측정은 완료됐다.
 - `go vet ./...`, `go test -count=1 ./...`, `go test -race -count=1 ./...`는 통과했다.
-- Codex CLI는 로그인 상태다.
-- Claude Code와 OpenCode는 provider 인증이 없어 실제 클라이언트 비교를 실행하지 못했다.
-- 따라서 eager 대 SkillLoader 24회 비교, 토큰 절감률, 실제 routing 성공률은 아직 주장하면 안 된다.
+- Codex CLI `0.144.6`의 live eager/MCP 비교는 2026-07-21 실행 완료했다.
+- Claude Code는 미로그인이고 OpenCode는 동일 모델 조건을 검증하지 않아 비교에서 제외했다.
+- 정식 결과는 `bench/results/2026-07-21-codex-0.144.6-gate6-isolated/`와
+  `docs/PRODUCT_EVIDENCE.md`를 기준으로 한다.
+- 기록된 10-skill 결과 범위를 넘어선 양의 토큰 절감, 대형 카탈로그
+  break-even, 태스크 완수 품질은 아직 주장하면 안 된다.
 
 ## 네가 이어서 할 일
 

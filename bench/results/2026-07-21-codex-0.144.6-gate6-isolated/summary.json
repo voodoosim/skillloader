@@ -1,0 +1,119 @@
+{
+  "comparisons": {
+    "catalog_overhead_note": "Offline cl100k_base estimate over the exact eager catalog block and canonical MCP tools/list schemas; not provider billing tokens.",
+    "catalog_overhead_reduction_percent_cl100k_estimate": 22.41,
+    "duration": {
+      "eager_total_ms": 87149,
+      "reduction_percent": -122.72,
+      "skillloader_total_ms": 194094
+    },
+    "initial_static_overhead": {
+      "eager_cl100k_estimate": 711,
+      "reduction_percent_cl100k_estimate": 12.94,
+      "skillloader_cl100k_estimate": 619
+    },
+    "total_input_note": "Codex turn usage aggregates all model calls, including cached input tokens.",
+    "total_input_token_reduction_percent_client_reported": -242.84,
+    "uncached_input_tokens_client_reported": {
+      "eager": 140321,
+      "reduction_percent": -10.81,
+      "skillloader": 155483
+    }
+  },
+  "generated_at": "2026-07-21T08:17:52.614458+00:00",
+  "modes": {
+    "eager": {
+      "completed_exit_zero": 12,
+      "duration_ms_total": 87149,
+      "payload_token_estimate_totals": {
+        "load_results_cl100k": 0,
+        "prompt_cl100k": 110,
+        "search_results_cl100k": 0
+      },
+      "quality": {
+        "exact_selected_instruction_run_total": 11,
+        "exact_selected_instruction_runs": 11,
+        "incorrect_load_percent": 16.67,
+        "incorrect_load_runs": 2,
+        "load_count_correct": 10,
+        "load_count_total": 12,
+        "no_load_correct": 1,
+        "no_load_percent": 50.0,
+        "no_load_total": 2,
+        "required_instruction_set_applied": 9,
+        "required_instruction_set_total": 10,
+        "routing_failures": 0,
+        "selection_top_one_correct": 9,
+        "selection_top_one_percent": 90.0,
+        "selection_top_one_total": 10,
+        "task_success_total": 12,
+        "task_successes": 10,
+        "top_five_recall_correct": 0,
+        "top_five_recall_percent": null,
+        "top_five_recall_total": 0,
+        "top_one_correct": 9,
+        "top_one_percent": 90.0,
+        "top_one_total": 10
+      },
+      "run_count": 12,
+      "usage_totals_client_reported": {
+        "cached_input_tokens": 12032,
+        "input_tokens": 152353,
+        "output_tokens": 950,
+        "reasoning_output_tokens": 0
+      }
+    },
+    "skillloader": {
+      "completed_exit_zero": 12,
+      "duration_ms_total": 194094,
+      "payload_token_estimate_totals": {
+        "load_results_cl100k": 3340,
+        "prompt_cl100k": 110,
+        "search_results_cl100k": 3183
+      },
+      "quality": {
+        "exact_selected_instruction_run_total": 9,
+        "exact_selected_instruction_runs": 9,
+        "incorrect_load_percent": 0.0,
+        "incorrect_load_runs": 0,
+        "load_count_correct": 11,
+        "load_count_total": 12,
+        "no_load_correct": 2,
+        "no_load_percent": 100.0,
+        "no_load_total": 2,
+        "required_instruction_set_applied": 9,
+        "required_instruction_set_total": 10,
+        "routing_failures": 0,
+        "selection_top_one_correct": 9,
+        "selection_top_one_percent": 90.0,
+        "selection_top_one_total": 10,
+        "task_success_total": 12,
+        "task_successes": 11,
+        "top_five_recall_correct": 9,
+        "top_five_recall_percent": 90.0,
+        "top_five_recall_total": 10,
+        "top_one_correct": 8,
+        "top_one_percent": 80.0,
+        "top_one_total": 10
+      },
+      "run_count": 12,
+      "usage_totals_client_reported": {
+        "cached_input_tokens": 366848,
+        "input_tokens": 522331,
+        "output_tokens": 3557,
+        "reasoning_output_tokens": 1401
+      }
+    }
+  },
+  "run_count": 24,
+  "schema_version": 1,
+  "static_token_estimates": {
+    "common_policy_cl100k": 102,
+    "eager_catalog_block_cl100k": 589,
+    "eager_developer_instructions_cl100k": 711,
+    "mcp_tool_schemas_cl100k": 457,
+    "method": "tiktoken 0.13.0 cl100k_base",
+    "skillloader_developer_instructions_cl100k": 162
+  },
+  "task_completion_success": "not measured; fixture evaluates routing and exact final-instruction extraction"
+}

@@ -14,6 +14,31 @@ go install github.com/voodoosim/skillloader@latest
 This downloads and builds the binary into `$GOPATH/bin/skillloader` (default
 `~/go/bin/`).
 
+## One-line user-local install
+
+On Unix-like systems with Go 1.26.5 or newer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/voodoosim/skillloader/main/scripts/install.sh | sh
+```
+
+The script installs to `~/.local/bin/skillloader`, verifies `skillloader help`,
+and does not modify client configuration. To register Codex explicitly:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/voodoosim/skillloader/main/scripts/install.sh | sh -s -- --configure-codex
+```
+
+This URL becomes usable only after the repository and module are publicly
+readable and `scripts/install.sh` is committed to `main`. The installer is
+Unix-only; Windows and release binaries remain separate packaging work.
+
+For a local checkout, install without network access:
+
+```bash
+SKILLLOADER_SOURCE_DIR="$PWD" scripts/install.sh
+```
+
 ## From source (manual clone)
 
 ```bash

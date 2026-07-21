@@ -56,6 +56,27 @@ func (e *SearchEngine) Search(query string, limit int) []SearchMatch {
 
 	// Layer 5: Aggregate scores and sort deterministic.
 	scored := layerAggregate(e.index, tagScores, nameScores, descScores)
+	// Description matches are fallback-only: when the query has a name or tag
+	// match, do not dilute the bounded result set with description-only entries.
+	strongMatch := false
+	for i := range e.index {
+		if tagScores[i]+nameScores[i] > 0 {
+			strongMatch = true
+			break
+		}
+	}
+	if strongMatch {
+		filtered := make([]scoredEntry, 0, len(scored))
+		for i, entry := range e.index {
+			if tagScores[i]+nameScores[i] > 0 {
+				filtered = append(filtered, scoredEntry{
+					entry: entry,
+					score: tagScores[i] + nameScores[i] + descScores[i],
+				})
+			}
+		}
+		scored = filtered
+	}
 	sort.Slice(scored, func(i, j int) bool {
 		if scored[i].score != scored[j].score {
 			return scored[i].score > scored[j].score

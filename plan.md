@@ -158,8 +158,8 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 - [x] `go vet ./...`가 통과한다.
 - [x] `go build ./...`가 통과한다.
 - [x] 저장소 밖 임시 디렉터리에서 바이너리 스모크 테스트를 실행한다.
-- [x] Codex가 검색 후 정확히 한 스킬을 로드하고 전체 문서를 적용하는지
-  고정 통합 작업으로 검증한다.
+- [x] Codex가 검색 후 정확히 한 스킬의 전체 문서를 반환받고, 마지막 지시문을
+  정확히 추출하는지 고정 통합 작업으로 검증한다.
 - [x] 다른 AI가 같은 integration 커밋에서 검증 명령을 독립 재실행한다.
 
 종료 증거: 정확한 명령, 종료 코드, 테스트 수, 대상 커밋이
@@ -167,14 +167,27 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 
 ### Gate 6 — 제품 근거
 
-- [ ] eager 등록과 SkillLoader를 같은 모델·작업·카탈로그 조건에서 비교한다.
-- [ ] 카탈로그 오버헤드, 라우팅 작업 오버헤드, 총 입력 토큰을 분리한다.
-- [ ] top-1, top-5, 오로드, 미로드 지표를 보고한다.
+- [x] eager 등록과 SkillLoader를 같은 모델·작업·카탈로그 조건에서 비교한다.
+- [x] 카탈로그 오버헤드, 라우팅 작업 오버헤드, 총 입력 토큰을 분리한다.
+- [x] top-1, top-5, 오로드, 미로드 지표를 보고한다.
 - [x] synthetic fixture에서 cold·warm 검색과 로드의 p50·p95를 재현 가능한 방식으로 측정한다.
-- [ ] 원시 입력과 기계 판독 결과를 저장소에 기록한다.
+- [ ] 원시 입력과 기계 판독 결과를 커밋한다. 현재 작업 트리에만 기록되어
+  있으며, 결과를 커밋할 때 이 항목과 저장소의 `uncommitted` 상태 표기도
+  같은 커밋에서 갱신한다.
 - [x] 공개 문구는 실제 측정 결과를 넘지 않는다.
 
 종료 증거: `docs/BENCHMARK.md`와 커밋된 결과 자료만으로 수치를 재현한다.
+
+**현재 증거**: Codex CLI `0.144.6`, `gpt-5.6-sol`, 10-skill 합성
+카탈로그, 12개 태스크를 격리된 eager/MCP 환경에서 각 1회 실행했다. routing
+scoring-only fixture oracle 1건을 교정한 뒤 fixture 성공은 eager 10/12,
+SkillLoader 11/12였고, SkillLoader raw search
+top-1은 8/10, top-5 recall은 9/10이었다. 작은 카탈로그에서 SkillLoader의
+client-reported total input은 eager보다 242.84% 증가했다. 태스크 완수 품질,
+반복 실행 통계, 실제 대형 카탈로그
+break-even은 검증하지 않았다. 원시 자료와 재채점 명령은
+`bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` 및
+`docs/PRODUCT_EVIDENCE.md`에 있다.
 
 ### Gate 7 — 공개 릴리스
 
@@ -201,9 +214,10 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 1. [x] 기존 Go 파일의 재사용 판단표를 완성한다.
 2. [x] 중복 이름 처리 구현을 문서의 거부 정책과 다시 일치시킨다.
 3. [x] Python parity fixture와 허용 기준을 고정한다.
-4. [x] 저장소 밖 stdio 스모크와 live Claude/Codex/OpenCode 통합을 검증한다.
-5. [x] synthetic cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
-6. [x] 검증 결과를 커밋한 뒤 독립 AI 검토를 요청한다.
+4. [x] 저장소 밖 stdio 스모크와 live Codex 통합을 검증한다.
+5. [ ] live Claude Code와 OpenCode 통합을 검증한다.
+6. [x] synthetic cold/warm benchmark로 캐시와 검색 가중치를 평가한다.
+7. [ ] 검증 결과를 커밋하고 해당 커밋을 독립 AI가 다시 검토한다.
 
 ## 7. 중단 조건
 
@@ -233,4 +247,4 @@ Python `skill-loader/scripts/skill_loader.py` (5,397글자, 87스킬 인덱스)�
 | 실행 중 카탈로그 변경 감지 | Gate 2 | 재시작 필요; hot reload 미구현 |
 | Python 기준 구현과 fixture 위치 | Gate 1 | `scripts/verify_parity.py`, `testdata/parity/` (10/10 통과) |
 | 캐시 용량과 eviction | Gate 6 | 측정 후 결정 |
-| 두 번째 MCP 클라이언트 | Gate 7 이후 | MVP 범위 밖; OpenCode(stdio)·Codex(stdio)·Claude(stdio) 호환 |
+| 두 번째 MCP 클라이언트 | Gate 7 이후 | Codex CLI `0.144.6` fixture 검증 완료; OpenCode·Claude Code 미검증 |

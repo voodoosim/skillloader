@@ -1,0 +1,119 @@
+{
+  "comparisons": {
+    "catalog_overhead_note": "Offline cl100k_base estimate over the exact eager catalog block and canonical MCP tools/list schemas; not provider billing tokens.",
+    "catalog_overhead_reduction_percent_cl100k_estimate": 22.41,
+    "duration": {
+      "eager_total_ms": 80413,
+      "reduction_percent": -166.67,
+      "skillloader_total_ms": 214436
+    },
+    "initial_static_overhead": {
+      "eager_cl100k_estimate": 711,
+      "reduction_percent_cl100k_estimate": 12.94,
+      "skillloader_cl100k_estimate": 619
+    },
+    "total_input_note": "Codex turn usage aggregates all model calls, including cached input tokens.",
+    "total_input_token_reduction_percent_client_reported": -225.99,
+    "uncached_input_tokens_client_reported": {
+      "eager": 80490,
+      "reduction_percent": -57.27,
+      "skillloader": 126584
+    }
+  },
+  "generated_at": "2026-07-21T06:35:50.126653+00:00",
+  "modes": {
+    "eager": {
+      "completed_exit_zero": 12,
+      "duration_ms_total": 80413,
+      "payload_token_estimate_totals": {
+        "load_results_cl100k": 0,
+        "prompt_cl100k": 110,
+        "search_results_cl100k": 0
+      },
+      "quality": {
+        "full_document_instruction_applied": 11,
+        "full_document_instruction_total": 11,
+        "incorrect_load_percent": 8.33,
+        "incorrect_load_runs": 1,
+        "load_count_correct": 10,
+        "load_count_total": 12,
+        "no_load_correct": 1,
+        "no_load_percent": 50.0,
+        "no_load_total": 2,
+        "required_document_set_applied": 9,
+        "required_document_set_total": 10,
+        "routing_failures": 0,
+        "selection_top_one_correct": 10,
+        "selection_top_one_percent": 100.0,
+        "selection_top_one_total": 10,
+        "task_success_total": 12,
+        "task_successes": 10,
+        "top_five_recall_correct": 0,
+        "top_five_recall_percent": null,
+        "top_five_recall_total": 0,
+        "top_one_correct": 10,
+        "top_one_percent": 100.0,
+        "top_one_total": 10
+      },
+      "run_count": 12,
+      "usage_totals_client_reported": {
+        "cached_input_tokens": 90112,
+        "input_tokens": 170602,
+        "output_tokens": 1023,
+        "reasoning_output_tokens": 94
+      }
+    },
+    "skillloader": {
+      "completed_exit_zero": 12,
+      "duration_ms_total": 214436,
+      "payload_token_estimate_totals": {
+        "load_results_cl100k": 3360,
+        "prompt_cl100k": 110,
+        "search_results_cl100k": 3219
+      },
+      "quality": {
+        "full_document_instruction_applied": 9,
+        "full_document_instruction_total": 9,
+        "incorrect_load_percent": 0.0,
+        "incorrect_load_runs": 0,
+        "load_count_correct": 10,
+        "load_count_total": 12,
+        "no_load_correct": 2,
+        "no_load_percent": 100.0,
+        "no_load_total": 2,
+        "required_document_set_applied": 8,
+        "required_document_set_total": 10,
+        "routing_failures": 0,
+        "selection_top_one_correct": 9,
+        "selection_top_one_percent": 90.0,
+        "selection_top_one_total": 10,
+        "task_success_total": 12,
+        "task_successes": 10,
+        "top_five_recall_correct": 9,
+        "top_five_recall_percent": 90.0,
+        "top_five_recall_total": 10,
+        "top_one_correct": 8,
+        "top_one_percent": 80.0,
+        "top_one_total": 10
+      },
+      "run_count": 12,
+      "usage_totals_client_reported": {
+        "cached_input_tokens": 429568,
+        "input_tokens": 556152,
+        "output_tokens": 3904,
+        "reasoning_output_tokens": 1533
+      }
+    }
+  },
+  "run_count": 24,
+  "schema_version": 1,
+  "static_token_estimates": {
+    "common_policy_cl100k": 102,
+    "eager_catalog_block_cl100k": 589,
+    "eager_developer_instructions_cl100k": 711,
+    "mcp_tool_schemas_cl100k": 457,
+    "method": "tiktoken 0.13.0 cl100k_base",
+    "skillloader_developer_instructions_cl100k": 162
+  },
+  "task_completion_success": "not measured; fixture evaluates routing and document application"
+}

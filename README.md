@@ -6,9 +6,10 @@ SkillLoader is a Go MCP server prototype that keeps a large skill catalog outsid
 AI agent's steady-state context. The agent searches the catalog and loads the
 smallest matching skill only when a task needs it.
 
-> Status: local prototype. Core unit and in-memory MCP tests exist; live Codex
-> integration, parity fixtures, benchmarks, release packaging, and public
-> compatibility claims are not complete.
+> Status: local prototype. Core, parity, subprocess MCP, synthetic benchmark,
+> and one live Codex routing fixture are verified. Large-catalog product benefit,
+> task-completion quality, release packaging, and public multi-client
+> compatibility are not complete.
 
 ## Why
 
@@ -34,8 +35,9 @@ The complete catalog stays on the server. A normal task should expose only:
 3. the body of the selected skill.
 
 Every load reads and hashes the current file bytes before consulting the document
-cache. The cache avoids re-validating unchanged frontmatter; its latency effect is
-not yet measured. It does not remove the tokens of a returned skill body.
+cache. The cache avoids re-validating unchanged frontmatter; its core latency
+effect is measured only on synthetic fixtures. It does not remove the tokens of
+a returned skill body.
 
 ## Model-visible MCP tools
 
@@ -63,9 +65,11 @@ The implemented request and response shapes are defined in
 - Two model-visible MCP tools
 - Stable JSON output for direct CLI diagnostics
 
-Client-specific live bootstrap remains unverified; see
-[docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for Claude Code, Codex,
-and OpenCode registration and isolated verification commands.
+Live Codex CLI `0.144.6` bootstrap is verified on the versioned 10-skill routing
+fixture in an isolated temporary Codex environment. Claude Code and OpenCode
+remain unverified; see
+[docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for registration and
+isolated verification commands.
 
 `SKILLLOADER_ROOTS` may override the default roots with a comma-separated list
 of literal paths. It performs whitespace trimming only; relative paths resolve
@@ -83,9 +87,12 @@ structured content, and a JSON TextContent compatibility copy:
 
 ## Token claim
 
-No token-reduction percentage is currently proven. Catalog overhead and total
-request tokens must be measured separately using [docs/BENCHMARK.md](docs/BENCHMARK.md)
-before publishing a numerical claim.
+No positive token-reduction percentage is proven. In the recorded live Codex
+10-skill fixture, SkillLoader reduced the offline initial static estimate by
+12.94%, but client-reported total input increased 242.84% because search and
+load add model turns. This small synthetic result does not establish a
+large-catalog break-even point; see [docs/BENCHMARK.md](docs/BENCHMARK.md) and
+[docs/PRODUCT_EVIDENCE.md](docs/PRODUCT_EVIDENCE.md).
 
 ## Project documents
 

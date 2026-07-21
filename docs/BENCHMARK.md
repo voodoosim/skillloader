@@ -6,7 +6,9 @@ Measure whether SkillLoader reduces skill-related context overhead without
 damaging routing quality or task completion. Measure cache performance
 separately so latency improvements are not mislabeled as token savings.
 
-No token-reduction percentage is currently verified.
+No positive token-reduction percentage is currently verified. The recorded,
+currently uncommitted live Codex small-catalog result below measured an increase
+in total input.
 
 ## Claims under test
 
@@ -58,8 +60,8 @@ Use a versioned, labeled suite containing:
 - requests requiring one specialist skill;
 - requests requiring a separate safety or verification gate.
 
-Each task records the expected top match, allowed alternatives, and whether no
-load is correct.
+Each task records the expected top match, exact required skill names, allowed
+alternatives, and whether no load is correct.
 
 The committed task fixture is `bench/tasks/task-fixture-v1.json`. It targets the
 parity test catalog (`testdata/parity/`) and covers all required categories with
@@ -161,6 +163,46 @@ go build -o /tmp/skillloader .
 /tmp/skillloader doctor --json    # cold start: catalog build + parse
 /tmp/skillloader doctor --json    # warm start: snapshot cache hit
 ```
+
+## Live Codex routing evidence
+
+The generated result directory
+`bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` contains 12 paired live runs on
+Codex CLI `0.144.6`, model `gpt-5.6-sol`, and the 10-skill synthetic parity
+catalog in temporary isolated `HOME` and `CODEX_HOME` directories. Run or
+rescore it with `scripts/run_gate6_codex.py` as documented in
+`docs/PRODUCT_EVIDENCE.md`.
+
+| Metric | Eager | SkillLoader |
+|---|---:|---:|
+| Routing-fixture success | 10/12 | 11/12 |
+| Final selection top-1 | 9/10 | 9/10 |
+| Raw search top-1 | n/a | 8/10 |
+| Raw search top-5 recall | n/a | 9/10 |
+| No-load accuracy | 1/2 | 2/2 |
+| Incorrect-load runs | 2/12 | 0/12 |
+| Total input tokens, client-reported | 152,353 | 522,331 |
+| Uncached input tokens, client-reported | 140,321 | 155,483 |
+| Total wall time | 87.149s | 194.094s |
+
+The exact small-catalog initial static estimate was 711 eager tokens versus 619
+SkillLoader tokens, a 12.94% reduction. Despite that, SkillLoader required
+extra model turns for search and load. Its client-reported total input increased
+242.84%, uncached input increased 10.81%, and wall time increased 122.72%.
+
+The earlier `bench/results/2026-07-21-codex-0.144.6-gate6/` comparison is
+superseded because host-level `AGENTS.md` instructions entered its effective
+prompts. It remains historical execution evidence, not product-comparison
+evidence.
+
+This is a routing and selected-skill final-instruction extraction fixture, not a
+task completion benchmark. It uses one run per task and does not establish a
+large-catalog break-even point or a positive product token claim.
+
+After execution, review found that the regression query requested testing but
+the scoring fixture also required the unrelated release-notes skill. The
+scoring-only oracle was corrected to require `test-designer`; the recorded
+query, effective prompt, model output, usage, and duration were not changed.
 
 ## Acceptance rule
 

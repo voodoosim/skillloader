@@ -90,14 +90,9 @@
       "limit": 5,
       "results": [
         {
-          "score": 59,
+          "score": 116,
           "name": "contract-auditor",
           "tags": ["contract", "mcp", "schema"]
-        },
-        {
-          "score": 5,
-          "name": "api-guardian",
-          "tags": ["api", "openapi", "security"]
         }
       ]
     },

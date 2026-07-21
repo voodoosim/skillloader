@@ -99,3 +99,8 @@ bash scripts/smoke-test.sh
 Live model behavior is not established by these commands. A client-specific
 run must record the exact client version, configuration scope, selected skill,
 and complete loaded document before claiming live compatibility.
+
+The Codex CLI `0.144.6` live evidence meeting those requirements is recorded in
+`bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` and
+`docs/PRODUCT_EVIDENCE.md`. It does not establish Claude Code or OpenCode
+compatibility.

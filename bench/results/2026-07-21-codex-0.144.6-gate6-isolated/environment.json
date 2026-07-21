@@ -1,0 +1,281 @@
+{
+  "binary_sha256": "5e8425871ef58b525d647d68755d4476f5bbf3daf5edc0e5788684949e5a21a3",
+  "build_source": {
+    "files": [
+      "bench_test.go",
+      "benchmark_evidence_test.go",
+      "cache.go",
+      "catalog.go",
+      "doctor.go",
+      "doctor_test.go",
+      "go.mod",
+      "go.sum",
+      "integration_test.go",
+      "loader.go",
+      "loader_test.go",
+      "main.go",
+      "main_test.go",
+      "mcp_test.go",
+      "parity_test.go",
+      "search.go",
+      "search_test.go",
+      "snapshot.go",
+      "snapshot_test.go",
+      "stdio_test.go"
+    ],
+    "git_clean": true,
+    "sha256": "f13ab83f927fa540fe4bbd167fdd9dde92f9d355bf8f340353dbf72a8f72b0b4"
+  },
+  "catalog_root": "testdata/parity/home/.codex/skills",
+  "catalog_sha256": "9a108fc61ae23247a119b8e4413011a583c9a9a1dd9bbf18ccc7c834bed802a1",
+  "catalog_size": 10,
+  "catalog_skill_names": [
+    "api-guardian",
+    "branch-surgeon",
+    "cache-observer",
+    "contract-auditor",
+    "docker-builder",
+    "incident-triage",
+    "korean-router",
+    "migration-planner",
+    "release-notes",
+    "test-designer"
+  ],
+  "codex_auth_status": "Logged in using ChatGPT",
+  "codex_version": "codex-cli 0.144.6",
+  "generated_at": "2026-07-21T06:37:13.536855+00:00",
+  "git_branch": "main",
+  "git_commit": "782d2b3a739b411f01836ea87fc8a51f5b143b69",
+  "go_version": "go version go1.26.5 linux/amd64",
+  "isolation": {
+    "approval_policy": "never",
+    "ephemeral": true,
+    "ephemeral_auth_symlink": true,
+    "global_agent_instructions": false,
+    "ignore_user_config": true,
+    "isolated_codex_home": true,
+    "mcp_tool_approval_mode": "approve",
+    "runner_credentials_read_or_copied": false,
+    "sandbox": "read-only",
+    "user_config_modified": false,
+    "working_directory": "temporary directory outside repository"
+  },
+  "mcp_tools": [
+    {
+      "description": "Load a skill by exact logical name. Returns the complete skill document. Use only the name returned by search_skills.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "required, the exact logical skill name from search results",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "load_skill",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_revision": {
+            "type": "string"
+          },
+          "error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "skill": {
+            "additionalProperties": false,
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "content_sha256": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "content",
+              "source",
+              "content_sha256"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        },
+        "required": [
+          "catalog_revision"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Search the skill catalog by task description. Returns bounded, ranked metadata matches. Use this before loading a skill to find the best match.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "maximum results (1-10, default 5)",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "query": {
+            "description": "required, the task description to search for matching skills",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "search_skills",
+      "outputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_revision": {
+            "type": "string"
+          },
+          "error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "matches": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "integer"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "tags": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "description",
+                "tags",
+                "source",
+                "score"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "limit",
+          "matches",
+          "catalog_revision"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "model": "gpt-5.6-sol",
+  "model_provider": "openai via ChatGPT login",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python_version": "3.12.3",
+  "run_order": "paired by task; eager first for even indexes, skillloader first for odd indexes",
+  "runner": {
+    "argv_schema_version": 2,
+    "execution_sha256": "928eef845d3125b9bf0667a481eeeec1544490c6dbd964ab0c1f7bf3089b1f9a",
+    "last_rescore_sha256": "d0cb685e9313953985a2f6c3c4c173d3f7c1ce75b1104c7b23820bf246cd19c4",
+    "last_rescored_at": "2026-07-21T08:17:52.614699+00:00",
+    "prior_scoring_fixture_sha256": [
+      "2a72c920ce1c441b10fd0a2285142cda5b91cad6a92483011b385c771d0c11dd"
+    ],
+    "requirements": "requirements-gate6.txt",
+    "requirements_sha256": "93384ba99cb107e482f0b8e2afa38cb09f84f9b3aa5e0042354f02c94dd68df1",
+    "scoring_fixture_sha256": "585adf9e3534ff35342accff36d2a1aeb71cb9474b342243ff1f4d29db9ea5bf"
+  },
+  "schema_version": 1,
+  "static_token_estimates": {
+    "common_policy_cl100k": 102,
+    "eager_catalog_block_cl100k": 589,
+    "eager_developer_instructions_cl100k": 711,
+    "mcp_tool_schemas_cl100k": 457,
+    "method": "tiktoken 0.13.0 cl100k_base",
+    "skillloader_developer_instructions_cl100k": 162
+  },
+  "task_fixture": "bench/tasks/task-fixture-v1.json",
+  "task_fixture_sha256": "2a72c920ce1c441b10fd0a2285142cda5b91cad6a92483011b385c771d0c11dd",
+  "temperature": "client default; CLI exposes no value in this run"
+}

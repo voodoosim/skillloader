@@ -1,67 +1,144 @@
-# Gate 6 제품 근거
+# Gate 6 product evidence
 
-## 측정 가능성 판정
+## Accepted isolated live Codex comparison
 
-2026-07-21 현재 Codex CLI는 로그인 상태지만 Claude Code와 OpenCode에는
-사용 가능한 provider 인증이 없다. 따라서 12개 태스크를 두 설정으로 모두
-실행한 실측 결과를 생성하지 않았으며, 토큰 절감이나 작업 성공률을 주장하지
-않는다.
+On 2026-07-21, the versioned 12-task routing fixture was run once in each of
+two invocation-scoped configurations, for 24 live Codex executions total:
 
-확인 명령:
+- Client: Codex CLI `0.144.6`
+- Model: `gpt-5.6-sol` through ChatGPT login
+- Catalog: the 10 synthetic parity skills
+- Eager mode: the complete catalog in invocation-scoped developer instructions
+- SkillLoader mode: the bootstrap in developer instructions and exactly the
+  `search_skills` and `load_skill` MCP tools
+- User prompt: the same `Query: ...` text in each paired run
+- Isolation: a temporary `HOME` and `CODEX_HOME`, an ephemeral symlink to the
+  active Codex authentication file, `--ignore-user-config`, `--ephemeral`, a
+  read-only sandbox, and a temporary working directory outside the repository
+- Effective-prompt check: `codex debug prompt-input` was run in the isolated
+  environment before every call; its hash was recorded and every call rejected
+  injected `# AGENTS.md instructions`
+- Sampling: one run per task and mode; temperature was left at the unreported
+  Codex client default
 
-```bash
-codex login status
-claude auth status
-opencode providers list
-```
-
-## 고정 비교 프로토콜
-
-대상 fixture는 `bench/tasks/task-fixture-v1.json`이며 12개 태스크를 사용한다.
-각 태스크를 같은 모델, 모델 버전, system instructions, temperature, 카탈로그,
-작업 입력으로 두 번 실행한다.
-
-### 설정 A — eager
-
-10개 parity 스킬의 이름·태그·description·본문을 system prompt의 동일한
-catalog section에 주입한다. 첫 모델 호출 전의 입력 토큰, 전체 입력 토큰,
-최종 답변, 선택된 스킬을 원시 기록에 저장한다.
-
-### 설정 B — SkillLoader
-
-다음 루트로 MCP 서버를 시작한다.
+The runner does not read or copy the authentication file contents and does not
+modify user configuration. Reproduction command:
 
 ```bash
-SKILLLOADER_ROOTS="$PWD/testdata/parity/home/.codex/skills" go run .
+python3 -m pip install -r requirements-gate6.txt
+GATE6_RESULTS="$(mktemp -d /tmp/skillloader-gate6-results.XXXXXX)"
+python3 scripts/run_gate6_codex.py \
+  --output-dir "$GATE6_RESULTS/run"
 ```
 
-초기 system prompt에는 MCP bootstrap과 도구 스키마만 넣고, 모델의
-`search_skills` 호출과 선택된 `load_skill` 호출을 기록한다. 각 호출의
-structured result, 입력 토큰, 최종 답변을 같은 원시 기록에 저장한다.
+The runner requires a new output directory and refuses to overwrite recorded
+evidence. `requirements-gate6.txt` pins the token estimator used by this run.
 
-## 결과 형식
+The runner scores original Codex events before redacting the stored evidence. It
+records exact synthetic prompts, prompt hashes, redacted invocation arguments
+and Codex JSONL events, MCP results, final structured responses, usage,
+duration, and scores. Scores can be regenerated without another model call:
 
-실측이 가능해지면 다음 파일을 `bench/results/<date>-<client>-gate6/`에 저장한다.
-
-- `environment.json`: client/model/version, Go version, fixture SHA-256
-- `tasks.jsonl`: 태스크 정의와 실행 순서
-- `eager.jsonl`: eager 원시 호출·토큰·판정
-- `skillloader.jsonl`: search/load 원시 호출·토큰·판정
-- `summary.json`: top-1/top-5, no-load, incorrect-load, routing failure,
-  catalog overhead, total input tokens, p50/p95
-
-카탈로그 오버헤드와 총 입력 토큰 절감률은 분리 계산한다.
-
-```text
-reduction = 1 - (skillloader_tokens / eager_tokens)
+```bash
+python3 scripts/run_gate6_codex.py \
+  --rescore-dir bench/results/2026-07-21-codex-0.144.6-gate6-isolated
 ```
 
-클라이언트가 보고한 토큰 수가 없으면 tokenizer 이름·버전을 기록하고
-`estimate`로 표시한다. 자격 증명, 사용자 데이터, 원문 비밀값은 저장하지 않는다.
+Rescoring validates the full recorded invocation shape, preserves the recorded
+execution tasks, and permits scoring-only fixture changes only when task IDs and
+model-visible queries are unchanged. Prior scoring hashes and each record's
+exact current `scoring_task` are retained. It then regenerates the retained
+final response, usage, estimates, and scores against the current fixture catalog. The
+live calls were executed from uncommitted runner source. The
+artifact records the execution runner SHA-256, current rescoring runner SHA-256,
+fixture SHA-256, requirements SHA-256, and clean Go build-source hash. The exact
+execution-runner source is no longer available after review fixes and was not in
+base commit `782d2b3`; this is a clean-commit reproducibility limitation.
 
-## 현재 Gate 6 상태
+## Results
 
-- 합성 fixture의 Go cold/warm 성능 근거: 완료 (`bench/results/2026-07-20-go1.26.5-fixture100.json`)
-- eager 대 SkillLoader 라이브 비교: 인증 부족으로 미실행
-- 토큰·품질·라우팅 비교: 미측정
-- 다음 재개 조건: Claude/OpenCode provider 인증 후 동일 프로토콜로 24회 실행
+| Metric | Eager | SkillLoader |
+|---|---:|---:|
+| Executions completed | 12/12 | 12/12 |
+| Routing-fixture success | 10/12 | 11/12 |
+| Raw search top-1 | not applicable | 8/10 |
+| Raw search top-5 recall | not applicable | 9/10 |
+| Final selection top-1 | 9/10 | 9/10 |
+| No-load accuracy | 1/2 | 2/2 |
+| Incorrect-load runs | 2/12 | 0/12 |
+| Expected load count | 10/12 | 11/12 |
+| Required skill set with exact final instructions | 9/10 | 9/10 |
+| Runs copying every selected skill's final instruction exactly | 11/11 | 9/9 |
+| Routing failures | 0/12 | 0/12 |
+| MCP/tool execution failures | not applicable | 0/12 |
+| Client-reported input tokens | 152,353 | 522,331 |
+| Client-reported uncached input tokens | 140,321 | 155,483 |
+| Total wall time | 87.149s | 194.094s |
+
+For this small catalog, SkillLoader used 3.43 times the total input tokens and
+1.11 times the uncached input tokens reported by Codex. It took 2.23 times the
+wall time. Expressed through the benchmark's reduction formula, the results are
+`-242.84%` total input reduction, `-10.81%` uncached input reduction, and
+`-122.72%` duration reduction; these negative values mean increases.
+
+The offline `tiktoken 0.13.0` `cl100k_base` estimate gives:
+
+- eager developer instructions including the catalog: 711 tokens;
+- SkillLoader developer instructions plus exact MCP schemas: 619 tokens;
+- initial static overhead reduction: 12.94%;
+- catalog block alone versus MCP schemas: 589 versus 457 tokens, or 22.41%.
+
+These static estimates are not provider billing tokens. The client-reported turn
+usage aggregates all model calls and includes cached input; both raw dimensions
+are retained in `summary.json`.
+
+## Observed quality failures
+
+1. For `릴리스 노트 작성해줘`, eager selected `korean-router` and
+   `release-notes` instead of the exact required set; SkillLoader returned no
+   match. The current Korean query does not connect to the English-only release
+   metadata through SkillLoader search.
+2. Eager incorrectly selected `korean-router` for `서울 날씨 어때`; SkillLoader
+   correctly returned no match and loaded nothing.
+
+The security-gate query returned `docker-builder` as the raw search top-1, so
+SkillLoader's raw search top-1 failed for that task. Codex still loaded and
+applied the exact required set, `api-guardian` and `docker-builder`, with
+`api-guardian` first in its final selection.
+
+## Superseded evidence
+
+`bench/results/2026-07-21-codex-0.144.6-gate6/` is retained as historical
+evidence but is not an accepted eager-versus-SkillLoader product comparison.
+An independent review reproduced that the host-level
+`/home/vodo/.codex/AGENTS.md` entered its effective prompts despite
+`--ignore-user-config`; the old runner neither isolated `HOME` nor recorded the
+effective prompt. Its numbers are therefore confounded. It still records live
+Codex stdio MCP calls, but product conclusions use only the `-isolated` result.
+
+The task scoring fixture was strengthened after the superseded execution to
+require exact selected skill sets. After the accepted isolated execution,
+review also found that the regression query requested testing but the oracle
+incorrectly required `release-notes`. The current scoring fixture requires only
+`test-designer`. The recorded query, effective prompt, model output, usage, and
+duration are unchanged; `environment.json` retains the execution fixture hash,
+the current scoring hash, and prior scoring hashes separately.
+
+## Conclusion and limits
+
+Live Codex stdio compatibility, search/load execution, complete document
+returns, and exact extraction of each selected skill's final instruction are
+verified for this isolated fixture. The fixture does not verify that the model
+followed the full document while completing a substantive task. SkillLoader
+improved exact routing-fixture success by one run and
+eliminated incorrect loads, but a positive token or latency benefit is not
+verified; all three measured end-to-end cost dimensions were worse.
+
+This evidence does not establish:
+
+- task-completion quality beyond routing and final-instruction extraction;
+- statistical stability beyond one run per task and mode;
+- a real-catalog or large-catalog break-even point;
+- Claude Code or OpenCode compatibility;
+- provider-exact tokenization of the offline static layers;
+- release-artifact or clean-room installation compatibility.
