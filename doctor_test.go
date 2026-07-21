@@ -56,3 +56,34 @@ func TestBuildIndexRedactsInvalidDocumentPath(t *testing.T) {
 		t.Fatalf("catalog error leaked path: %q", errs[0])
 	}
 }
+
+func TestDoctorDetectsDuplicateAndInvalidRoot(t *testing.T) {
+	root := t.TempDir()
+	for i := 0; i < 2; i++ {
+		dir := filepath.Join(root, "skill", string(rune('a'+i)))
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: duplicate\ndescription: x\n---\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	report := Doctor([]string{root, filepath.Join(root, "skill", "a", "SKILL.md")}, NewCache())
+	if report.ErrorCount < 2 {
+		t.Fatalf("expected duplicate and non-directory errors: %+v", report)
+	}
+}
+
+func TestListOutputsAreValid(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "skill")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: listed\ndescription: x\ntags: [x]\n---\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(ListText([]string{root}), "listed") || !strings.Contains(ListJSON([]string{root}), "listed") {
+		t.Fatal("list output missing skill")
+	}
+}
