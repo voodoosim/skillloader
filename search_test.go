@@ -192,6 +192,18 @@ func TestSafetyFilterRejectsNameless(t *testing.T) {
 	}
 }
 
+func TestSafetyFilterRejectsNonPositiveAndMissingPath(t *testing.T) {
+	entries := []scoredEntry{
+		{entry: SkillEntry{Name: "zero", Path: "/x"}, score: 0},
+		{entry: SkillEntry{Name: "missing-path"}, score: 10},
+		{entry: SkillEntry{Name: "valid", Path: "/y"}, score: 10},
+	}
+	result := layerSafetyFilter(entries)
+	if len(result) != 1 || result[0].entry.Name != "valid" {
+		t.Fatalf("unexpected safety filter result: %+v", result)
+	}
+}
+
 func TestParseFrontmatterValid(t *testing.T) {
 	input := `---
 name: test-skill
@@ -225,6 +237,18 @@ func TestParseFrontmatterMissingDelimiter(t *testing.T) {
 	}
 	if fm != nil {
 		t.Errorf("expected nil map on error, got %v", fm)
+	}
+}
+
+func TestParseFrontmatterRejectsInvalidYAMLAndTags(t *testing.T) {
+	for _, input := range []string{
+		"---\nname: [broken\n---\n",
+		"---\nname: bad\ntags: [ok, 42]\n---\n",
+		"---\nname: bad\ntags: {bad: true}\n---\n",
+	} {
+		if _, err := parseFrontmatter(input); err == nil {
+			t.Fatalf("expected frontmatter error for %q", input)
+		}
 	}
 }
 

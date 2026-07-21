@@ -165,6 +165,38 @@ func TestMCPToolsExposeStructuredResultsAndRedactedErrors(t *testing.T) {
 	}
 }
 
+func TestMCPRejectsOversizedInputs(t *testing.T) {
+	ctx := context.Background()
+	clientTransport, serverTransport := mcp.NewInMemoryTransports()
+	serverSession, err := newServer(nil, []string{t.TempDir()}, NewCache()).Connect(ctx, serverTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer serverSession.Close()
+	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "0.0.1"}, nil)
+	clientSession, err := client.Connect(ctx, clientTransport, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clientSession.Close()
+	longQuery := strings.Repeat("x", maxSearchQueryRunes+1)
+	result, err := clientSession.CallTool(ctx, &mcp.CallToolParams{Name: "search_skills", Arguments: map[string]any{"query": longQuery}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Fatal("expected oversized query rejection")
+	}
+	longName := strings.Repeat("x", maxSkillNameRunes+1)
+	result, err = clientSession.CallTool(ctx, &mcp.CallToolParams{Name: "load_skill", Arguments: map[string]any{"name": longName}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Fatal("expected oversized name rejection")
+	}
+}
+
 func TestMCPRejectsAmbiguousSkillName(t *testing.T) {
 	index := []SkillEntry{
 		{Name: "dupe", Source: "codex", Path: "/private/codex/SKILL.md"},
