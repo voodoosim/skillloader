@@ -115,6 +115,26 @@ func TestSnapshotInvalidatesOnFileChange(t *testing.T) {
 	}
 }
 
+func TestSnapshotInvalidatesOnFileSizeChange(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", tmp)
+
+	entries := makeSnapshotTestEntries(t, tmp, 2)
+	roots := []string{tmp}
+	if err := saveSnapshot(entries, nil, roots); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+
+	if err := os.WriteFile(entries[0].Path, []byte("changed size"), 0644); err != nil {
+		t.Fatalf("rewrite: %v", err)
+	}
+
+	_, _, ok := loadSnapshot(roots)
+	if ok {
+		t.Fatal("snapshot should be invalid after file size change")
+	}
+}
+
 func TestSnapshotInvalidatesOnFileRemoval(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", tmp)

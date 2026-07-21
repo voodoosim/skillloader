@@ -21,6 +21,7 @@ const cacheDirName = "skillloader"
 type catalogSnapshot struct {
 	Entries         []SkillEntry
 	FileTimes       map[string]time.Time
+	FileSizes       map[string]int64
 	FileChecksums   map[string]string
 	NormalizedRoots []string
 	RootsHash       string
@@ -88,7 +89,8 @@ func loadSnapshot(roots []string) ([]SkillEntry, []string, bool) {
 			return nil, nil, false
 		}
 		stored, ok := snap.FileTimes[path]
-		if !ok || !info.ModTime().Equal(stored) {
+		size, sizeOK := snap.FileSizes[path]
+		if !ok || !sizeOK || !info.ModTime().Equal(stored) || info.Size() != size {
 			return nil, nil, false
 		}
 	}
@@ -114,6 +116,7 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 	snap := catalogSnapshot{
 		Entries:         copyEntries(entries),
 		FileTimes:       make(map[string]time.Time, len(entries)),
+		FileSizes:       make(map[string]int64, len(entries)),
 		FileChecksums:   make(map[string]string),
 		NormalizedRoots: r,
 		RootsHash:       hashRoots(r),
@@ -128,6 +131,7 @@ func saveSnapshot(entries []SkillEntry, errs []string, roots []string) error {
 			continue
 		}
 		snap.FileTimes[path] = info.ModTime()
+		snap.FileSizes[path] = info.Size()
 		snap.FileChecksums[path] = fileChecksum(roots, path)
 	}
 
