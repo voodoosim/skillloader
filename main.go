@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -61,6 +62,11 @@ type LoadOutput struct {
 	Error           *SkillError `json:"error,omitempty"`
 }
 
+const (
+	maxSearchQueryRunes = 4096
+	maxSkillNameRunes   = 256
+)
+
 func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 	engine := NewSearchEngine(index)
 	loader := NewSkillLoader(index, roots, cache)
@@ -74,7 +80,8 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 		Name:        "search_skills",
 		Description: "Search the skill catalog by task description. Returns bounded, ranked metadata matches. Use this before loading a skill to find the best match.",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, input SearchInput) (*mcp.CallToolResult, SearchOutput, error) {
-		if strings.TrimSpace(input.Query) == "" {
+		query := strings.TrimSpace(input.Query)
+		if query == "" || utf8.RuneCountInString(query) > maxSearchQueryRunes {
 			return &mcp.CallToolResult{IsError: true}, SearchOutput{
 				Matches:         []SearchMatch{},
 				CatalogRevision: cache.IndexHash(),
@@ -90,20 +97,20 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 		}
 
 		catalogRevision := cache.IndexHash()
-		queryHash := searchQueryHash(input.Query, limit, catalogRevision)
+		queryHash := searchQueryHash(query, limit, catalogRevision)
 		if input.KnownQueryHash == queryHash {
 			return nil, SearchOutput{
-				Query:           input.Query,
+				Query:           query,
 				Limit:           limit,
 				CatalogRevision: catalogRevision,
 				QueryHash:       queryHash,
 				Cached:          true,
 			}, nil
 		}
-		results := engine.Search(input.Query, limit)
+		results := engine.Search(query, limit)
 
 		return nil, SearchOutput{
-			Query:           input.Query,
+			Query:           query,
 			Limit:           limit,
 			Matches:         results,
 			CatalogRevision: catalogRevision,
@@ -115,14 +122,15 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 		Name:        "load_skill",
 		Description: "Load a skill by exact logical name. Returns the complete skill document. Use only the name returned by search_skills.",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, input LoadInput) (*mcp.CallToolResult, LoadOutput, error) {
-		if strings.TrimSpace(input.Name) == "" {
+		name := strings.TrimSpace(input.Name)
+		if name == "" || utf8.RuneCountInString(name) > maxSkillNameRunes {
 			return &mcp.CallToolResult{IsError: true}, LoadOutput{
 				CatalogRevision: cache.IndexHash(),
 				Error:           skillError("INVALID_ARGUMENT", "A non-empty logical skill name is required."),
 			}, nil
 		}
 
-		result, err := loader.Load(input.Name)
+		result, err := loader.Load(name)
 		if err != nil {
 			var appErr *SkillError
 			if !errors.As(err, &appErr) {
