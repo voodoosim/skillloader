@@ -260,6 +260,16 @@ func TestParseFrontmatterRejectsInvalidYAMLAndTags(t *testing.T) {
 	}
 }
 
+func TestParseFrontmatterDoesNotStringifyMetadataTypes(t *testing.T) {
+	fm, err := parseFrontmatter("---\nname: 42\ndescription: true\ntags: [x]\n---\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fm["name"] != "" || fm["description"] != "" {
+		t.Fatalf("unexpected metadata coercion: %#v", fm)
+	}
+}
+
 func TestParseFrontmatterYAMLListAndMultilineDescription(t *testing.T) {
 	input := `---
 name: yaml-skill

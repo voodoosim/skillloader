@@ -305,7 +305,9 @@ func normalizeYAMLString(value any) string {
 		}
 		return strings.Join(parts, ", ")
 	default:
-		return fmt.Sprintf("%v", v)
+		// Metadata fields must remain strings; stringify arbitrary YAML values
+		// would accept malformed skill identities and leak their representation.
+		return ""
 	}
 }
 
