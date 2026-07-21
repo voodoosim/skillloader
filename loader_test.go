@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -246,5 +247,34 @@ func TestLoaderDoesNotReturnCachedContentAfterRemoval(t *testing.T) {
 	}
 	if _, err := loader.Load("removable"); err == nil || !strings.Contains(err.Error(), "INVALID_SKILL") {
 		t.Fatalf("removed document error = %v, want INVALID_SKILL", err)
+	}
+}
+
+func TestCacheConcurrentGetSetNoDataLoss(t *testing.T) {
+	c := NewCache()
+	path := "/tmp/skill.md"
+	correctChecksum := "abc123"
+	correctContent := "the real content"
+
+	c.SetDocument(path, correctContent, correctChecksum)
+
+	var wg sync.WaitGroup
+	const n = 100
+
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			content, ok := c.GetDocument(path, correctChecksum)
+			if ok && content != correctContent {
+				t.Errorf("got wrong content: %q", content)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	if c.DocCount() != 1 {
+		t.Fatalf("concurrent GetDocument caused document loss: docCount=%d", c.DocCount())
 	}
 }

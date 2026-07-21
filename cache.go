@@ -71,7 +71,7 @@ func (c *Cache) GetDocument(path, checksum string) (string, bool) {
 
 	if checksum == "" || checksum != doc.checksum {
 		c.mu.Lock()
-		if current, exists := c.docs[path]; exists && current.checksum != checksum {
+		if current, exists := c.docs[path]; exists && current.checksum == doc.checksum {
 			delete(c.docs, path)
 		}
 		c.mu.Unlock()
