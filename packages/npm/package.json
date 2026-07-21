@@ -1,0 +1,9 @@
+{
+  "name": "@voodoosim/skillloader",
+  "version": "0.1.1",
+  "description": "SkillLoader MCP launcher",
+  "license": "MIT",
+  "bin": { "skillloader": "bin/skillloader.js" },
+  "files": ["bin"],
+  "engines": { "node": ">=18" }
+}
