@@ -77,6 +77,22 @@ func TestMCPToolsExposeStructuredResultsAndRedactedErrors(t *testing.T) {
 	if len(searchResult.Content) != 1 {
 		t.Fatalf("search text compatibility content = %#v", searchResult.Content)
 	}
+	searchCached, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name: "search_skills",
+		Arguments: map[string]any{
+			"query":            "MCP integration",
+			"limit":            3,
+			"known_query_hash": searchOutput.QueryHash,
+		},
+	})
+	if err != nil || searchCached.IsError {
+		t.Fatalf("cached search = %#v err=%v", searchCached, err)
+	}
+	var cachedSearchOutput SearchOutput
+	decodeStructured(t, searchCached.StructuredContent, &cachedSearchOutput)
+	if !cachedSearchOutput.Cached || len(cachedSearchOutput.Matches) != 0 || cachedSearchOutput.QueryHash != searchOutput.QueryHash {
+		t.Fatalf("cached search output = %#v", cachedSearchOutput)
+	}
 
 	searchWithoutLimit, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
 		Name:      "search_skills",
@@ -108,6 +124,21 @@ func TestMCPToolsExposeStructuredResultsAndRedactedErrors(t *testing.T) {
 	decodeStructured(t, loadSuccess.StructuredContent, &loadSuccessOutput)
 	if loadSuccessOutput.CatalogRevision == "" || loadSuccessOutput.Skill == nil || loadSuccessOutput.Skill.Name != "mcp-test" {
 		t.Fatalf("load success output = %#v", loadSuccessOutput)
+	}
+	loadCached, err := clientSession.CallTool(ctx, &mcp.CallToolParams{
+		Name: "load_skill",
+		Arguments: map[string]any{
+			"name":                 "mcp-test",
+			"known_content_sha256": loadSuccessOutput.ContentSHA256,
+		},
+	})
+	if err != nil || loadCached.IsError {
+		t.Fatalf("cached load = %#v err=%v", loadCached, err)
+	}
+	var cachedLoadOutput LoadOutput
+	decodeStructured(t, loadCached.StructuredContent, &cachedLoadOutput)
+	if !cachedLoadOutput.Cached || cachedLoadOutput.Skill != nil || cachedLoadOutput.ContentSHA256 != loadSuccessOutput.ContentSHA256 {
+		t.Fatalf("cached load output = %#v", cachedLoadOutput)
 	}
 
 	loadResult, err := clientSession.CallTool(ctx, &mcp.CallToolParams{

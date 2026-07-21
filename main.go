@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -47,12 +48,16 @@ type SearchOutput struct {
 	Limit           int           `json:"limit"`
 	Matches         []SearchMatch `json:"matches"`
 	CatalogRevision string        `json:"catalog_revision"`
+	QueryHash       string        `json:"query_hash"`
+	Cached          bool          `json:"cached"`
 	Error           *SkillError   `json:"error,omitempty"`
 }
 
 type LoadOutput struct {
 	Skill           *LoadResult `json:"skill,omitempty"`
 	CatalogRevision string      `json:"catalog_revision"`
+	ContentSHA256   string      `json:"content_sha256,omitempty"`
+	Cached          bool        `json:"cached"`
 	Error           *SkillError `json:"error,omitempty"`
 }
 
@@ -84,13 +89,25 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 			}
 		}
 
+		catalogRevision := cache.IndexHash()
+		queryHash := searchQueryHash(input.Query, limit, catalogRevision)
+		if input.KnownQueryHash == queryHash {
+			return nil, SearchOutput{
+				Query:           input.Query,
+				Limit:           limit,
+				CatalogRevision: catalogRevision,
+				QueryHash:       queryHash,
+				Cached:          true,
+			}, nil
+		}
 		results := engine.Search(input.Query, limit)
 
 		return nil, SearchOutput{
 			Query:           input.Query,
 			Limit:           limit,
 			Matches:         results,
-			CatalogRevision: cache.IndexHash(),
+			CatalogRevision: catalogRevision,
+			QueryHash:       queryHash,
 		}, nil
 	})
 
@@ -117,9 +134,18 @@ func newServer(index []SkillEntry, roots []string, cache *Cache) *mcp.Server {
 			}, nil
 		}
 
+		catalogRevision := cache.IndexHash()
+		if input.KnownContentSHA256 == result.ContentSHA {
+			return nil, LoadOutput{
+				CatalogRevision: catalogRevision,
+				ContentSHA256:   result.ContentSHA,
+				Cached:          true,
+			}, nil
+		}
 		return nil, LoadOutput{
 			Skill:           result,
-			CatalogRevision: cache.IndexHash(),
+			CatalogRevision: catalogRevision,
+			ContentSHA256:   result.ContentSHA,
 		}, nil
 	})
 
@@ -176,12 +202,19 @@ func printUsage(w io.Writer) {
 }
 
 type SearchInput struct {
-	Query string `json:"query" jsonschema:"required, the task description to search for matching skills"`
-	Limit *int   `json:"limit,omitempty" jsonschema:"maximum results (1-10, default 5)"`
+	Query          string `json:"query" jsonschema:"required, the task description to search for matching skills"`
+	Limit          *int   `json:"limit,omitempty" jsonschema:"maximum results (1-10, default 5)"`
+	KnownQueryHash string `json:"known_query_hash,omitempty" jsonschema:"hash returned by a previous identical search"`
 }
 
 type LoadInput struct {
-	Name string `json:"name" jsonschema:"required, the exact logical skill name from search results"`
+	Name               string `json:"name" jsonschema:"required, the exact logical skill name from search results"`
+	KnownContentSHA256 string `json:"known_content_sha256,omitempty" jsonschema:"content hash returned by a previous load"`
+}
+
+func searchQueryHash(query string, limit int, catalogRevision string) string {
+	value := fmt.Sprintf("%s\x00%d\x00%s", query, limit, catalogRevision)
+	return fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(value)))
 }
 
 func getRoots() []string {

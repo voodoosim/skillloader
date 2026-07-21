@@ -53,6 +53,11 @@ Result:
 }
 ```
 
+The response also includes `query_hash` and `cached`. A client may send the
+previous `query_hash` as `known_query_hash` on a repeated request with the same
+catalog revision. The server then returns `cached: true` and omits `matches`.
+The client must reuse the prior result in its session context.
+
 Rules:
 
 - `query` is required and non-empty.
@@ -85,6 +90,11 @@ Result:
   "catalog_revision": "sha256:..."
 }
 ```
+
+The response includes `content_sha256` and `cached`. A client may send the
+previous hash as `known_content_sha256` on a repeated load. The server then
+returns `cached: true` and omits the document body. This is a warm-session
+token optimization; the first load still returns the complete document.
 
 Rules:
 

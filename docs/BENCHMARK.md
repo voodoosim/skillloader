@@ -86,6 +86,12 @@ Report the two reduction percentages separately:
 reduction = 1 - (SkillLoader measured tokens / eager measured tokens)
 ```
 
+Token-cache measurements must include a cold request and repeated warm requests
+in the same client session. A warm cache result is valid only when the client
+reuses the prior `query_hash` or `content_sha256` and the MCP response omits the
+repeated payload. Server-side file-cache hits alone are latency measurements,
+not token savings.
+
 Use a client-reported or model-provider token count when available. If an offline
 tokenizer is used, record its exact name and version and label the result as an
 estimate.
