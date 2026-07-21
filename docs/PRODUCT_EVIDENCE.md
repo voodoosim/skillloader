@@ -126,6 +126,23 @@ the current scoring hash, and prior scoring hashes separately.
 
 ## Conclusion and limits
 
+## OpenCode warm-session token-cache check
+
+On 2026-07-21, OpenCode `1.18.4` ran one cold search/load pair and one repeated
+pair in the same session against the current local `skillloader` binary. The
+second pair supplied `known_query_hash` and `known_content_sha256`:
+
+| Measurement | Cold pair | Warm pair |
+|---|---:|---:|
+| Tool payload characters | 9,841 | 450 |
+| OpenCode-reported step input tokens | 16,969 | 542 |
+| `cached: true` responses | 0/2 | 2/2 |
+
+The observed tool-payload reduction was 95.43% for this one repeated scenario.
+This is warm-session evidence, not a general provider billing reduction claim;
+new sessions still pay the cold search/load cost, and broader repeated-task and
+catalog-size measurements remain required.
+
 Live Codex stdio compatibility, search/load execution, complete document
 returns, and exact extraction of each selected skill's final instruction are
 verified for this isolated fixture. The fixture does not verify that the model
