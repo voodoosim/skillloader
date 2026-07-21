@@ -1,6 +1,6 @@
 {
   "name": "@voodoosim/skillloader",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "SkillLoader MCP launcher",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/voodoosim/skillloader.git", "directory": "packages/npm" },
