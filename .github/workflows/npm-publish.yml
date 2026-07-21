@@ -19,7 +19,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Verify package version matches release
         working-directory: packages/npm
-        run: test "v$(node -p \"require('./package.json').version\")" = "${{ github.event.release.tag_name }}"
+        run: test "v$(jq -r .version package.json)" = "${{ github.event.release.tag_name }}"
       - name: Publish package
         working-directory: packages/npm
         run: npm publish --access public --provenance
