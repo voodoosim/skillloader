@@ -65,6 +65,14 @@ Install with one command:
 go install github.com/voodoosim/skillloader@latest
 ```
 
+Node.js users can install the published npm launcher:
+
+```bash
+npx @voodoosim/skillloader@0.1.1
+```
+
+Package page: [@voodoosim/skillloader on npm](https://www.npmjs.com/package/@voodoosim/skillloader)
+
 Unix users can use the user-local installer, and Codex users can register the
 stdio MCP server in the same command. Client-specific instructions and pinned
 release assets are documented in [INSTALL.md](INSTALL.md).
