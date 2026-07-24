@@ -1,12 +1,13 @@
 # SkillLoader 개선 보고서
 
-**Commit:** `e4eff5c`  
 **Branch:** `main`  
 **날짜:** 2026-07-21  
 
 ---
 
-## 1. WarmSnapshot 2.75배 속도 향상 (Critical)
+## Round 1 (commit `e4eff5c`)
+
+### 1. WarmSnapshot 2.75배 속도 향상 (Critical)
 
 **파일:** `snapshot.go`
 
@@ -69,3 +70,49 @@
 | 커버리지 | `-coverprofile` | 77.8% → **78.0%** |
 
 **변경 통계:** 5개 파일, +28줄 / -45줄 (net -17줄)
+
+---
+
+## Round 2 (commit `44977e6`)
+
+### 5. Cache GetDocument ABA Race Condition (High)
+
+**파일:** `cache.go:72-79`
+
+### 문제
+`GetDocument` 더블 체크드 락에서 갱신된 캐시 데이터가 삭제될 수 있음.
+
+```
+A: RLock → doc.checksum = "BBB" (stale) → RUnlock
+B: SetDocument(path, newContent, "AAA")  ← fresh data
+A: Lock → current("AAA") != checksum("BBB") → B의 데이터 삭제!
+```
+
+### 변경사항
+삭제 조건을 `current.checksum == doc.checksum`으로 변경. 자신이 읽은 stale 체크섬과 현재 캐시 체크섬이 같을 때만 삭제.
+
+```go
+// 수정 전
+if current, exists := c.docs[path]; exists && current.checksum != checksum {
+
+// 수정 후
+if current, exists := c.docs[path]; exists && current.checksum == doc.checksum {
+```
+
+### 추가 테스트
+- `TestCacheConcurrentGetSetNoDataLoss`: 100개 고루틴이 동시에 `GetDocument` 호출 → 문서 소실 없음 검증
+- `-race` 20회 연속 반복 통과 확인
+
+---
+
+## 검증 결과 (Round 2)
+
+| 검증 항목 | 명령어 | 결과 |
+|-----------|--------|------|
+| 단위 테스트 + race | `go test -race ./...` | **PASS** |
+| 정적 분석 | `go vet ./...` | **PASS** |
+| 포맷팅 | `gofmt -l .` | **clean** |
+| 커버리지 | `-coverprofile` | **78.1%** |
+| ColdBuild | `-bench=ColdBuild` | 1,874,954 ns |
+| WarmSnapshot | `-bench=WarmSnapshot` | 754,858 ns (2.48x faster) |
+| Concurrent test x20 | `-run=Concurrent -count=20` | **PASS** |
