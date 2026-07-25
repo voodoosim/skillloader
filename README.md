@@ -41,10 +41,10 @@ a returned skill body.
 
 ## Model-visible MCP tools
 
-| Tool | Purpose |
-|---|---|
-| `search_skills` | Return a bounded, ranked set of skill metadata |
-| `load_skill` | Return one resolved skill document by logical name |
+| Tool            | Purpose                                            |
+| --------------- | -------------------------------------------------- |
+| `search_skills` | Return a bounded, ranked set of skill metadata     |
+| `load_skill`    | Return one resolved skill document by logical name |
 
 Catalog inspection and diagnostics remain direct CLI commands so their schemas
 do not consume model context:
@@ -85,8 +85,9 @@ release assets are documented in [INSTALL.md](INSTALL.md).
 
 Live Codex CLI `0.144.6` bootstrap is verified on the versioned 10-skill routing
 fixture in an isolated temporary Codex environment. OpenCode `1.18.4` has also
-completed a live local search/load and warm-cache check; Claude Code remains
-unverified. See
+completed a live local search/load and warm-cache check. Claude Code CLI
+`2.1.212` completed a live `search_skills`/`load_skill` round trip against a
+real local catalog, but not a Gate-6-equivalent token/routing comparison. See
 [docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for registration and
 isolated verification commands.
 

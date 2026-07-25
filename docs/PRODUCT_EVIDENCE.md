@@ -57,23 +57,23 @@ base commit `782d2b3`; this is a clean-commit reproducibility limitation.
 
 ## Results
 
-| Metric | Eager | SkillLoader |
-|---|---:|---:|
-| Executions completed | 12/12 | 12/12 |
-| Routing-fixture success | 10/12 | 11/12 |
-| Raw search top-1 | not applicable | 8/10 |
-| Raw search top-5 recall | not applicable | 9/10 |
-| Final selection top-1 | 9/10 | 9/10 |
-| No-load accuracy | 1/2 | 2/2 |
-| Incorrect-load runs | 2/12 | 0/12 |
-| Expected load count | 10/12 | 11/12 |
-| Required skill set with exact final instructions | 9/10 | 9/10 |
-| Runs copying every selected skill's final instruction exactly | 11/11 | 9/9 |
-| Routing failures | 0/12 | 0/12 |
-| MCP/tool execution failures | not applicable | 0/12 |
-| Client-reported input tokens | 152,353 | 522,331 |
-| Client-reported uncached input tokens | 140,321 | 155,483 |
-| Total wall time | 87.149s | 194.094s |
+| Metric                                                        |          Eager | SkillLoader |
+| ------------------------------------------------------------- | -------------: | ----------: |
+| Executions completed                                          |          12/12 |       12/12 |
+| Routing-fixture success                                       |          10/12 |       11/12 |
+| Raw search top-1                                              | not applicable |        8/10 |
+| Raw search top-5 recall                                       | not applicable |        9/10 |
+| Final selection top-1                                         |           9/10 |        9/10 |
+| No-load accuracy                                              |            1/2 |         2/2 |
+| Incorrect-load runs                                           |           2/12 |        0/12 |
+| Expected load count                                           |          10/12 |       11/12 |
+| Required skill set with exact final instructions              |           9/10 |        9/10 |
+| Runs copying every selected skill's final instruction exactly |          11/11 |         9/9 |
+| Routing failures                                              |           0/12 |        0/12 |
+| MCP/tool execution failures                                   | not applicable |        0/12 |
+| Client-reported input tokens                                  |        152,353 |     522,331 |
+| Client-reported uncached input tokens                         |        140,321 |     155,483 |
+| Total wall time                                               |        87.149s |    194.094s |
 
 For this small catalog, SkillLoader used 3.43 times the total input tokens and
 1.11 times the uncached input tokens reported by Codex. It took 2.23 times the
@@ -132,11 +132,11 @@ On 2026-07-21, OpenCode `1.18.4` ran one cold search/load pair and one repeated
 pair in the same session against the current local `skillloader` binary. The
 second pair supplied `known_query_hash` and `known_content_sha256`:
 
-| Measurement | Cold pair | Warm pair |
-|---|---:|---:|
-| Tool payload characters | 9,841 | 450 |
-| OpenCode-reported step input tokens | 16,969 | 542 |
-| `cached: true` responses | 0/2 | 2/2 |
+| Measurement                         | Cold pair | Warm pair |
+| ----------------------------------- | --------: | --------: |
+| Tool payload characters             |     9,841 |       450 |
+| OpenCode-reported step input tokens |    16,969 |       542 |
+| `cached: true` responses            |       0/2 |       2/2 |
 
 The observed tool-payload reduction was 95.43% for this one repeated scenario.
 This is warm-session evidence, not a general provider billing reduction claim;
@@ -156,6 +156,8 @@ This evidence does not establish:
 - task-completion quality beyond routing and final-instruction extraction;
 - statistical stability beyond one run per task and mode;
 - a real-catalog or large-catalog break-even point;
-- Claude Code compatibility or cross-platform OpenCode behavior;
+- Claude Code token/routing behavior at catalog scale (a live stdio round trip
+  is recorded in `bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`,
+  but not a Gate-6-equivalent comparison), or cross-platform OpenCode behavior;
 - provider-exact tokenization of the offline static layers;
 - release-artifact or clean-room installation compatibility.

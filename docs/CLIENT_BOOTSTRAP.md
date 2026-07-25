@@ -43,6 +43,15 @@ claude -p "Use search_skills to find a relevant skill, then load exactly one." \
 The `--mcp-config` option and `.mcp.json` shape are documented by Anthropic:
 <https://docs.anthropic.com/en/docs/claude-code/mcp>.
 
+A live round trip (`search_skills` then `load_skill` against a real, non-synthetic
+local catalog) was recorded on Claude Code CLI `2.1.212` via `claude mcp add`
+project-scoped registration; both calls returned valid, checksum-matching
+results. See
+`bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`. This confirms
+the stdio contract works live under Claude Code; it is not a Gate-6-equivalent
+eager-vs-SkillLoader token/routing comparison — see "Common verification"
+below for what remains unestablished.
+
 ## Codex
 
 Register the same stdio command with the Codex CLI:
@@ -103,5 +112,9 @@ and complete loaded document before claiming live compatibility.
 The Codex CLI `0.144.6` live evidence meeting those requirements is recorded in
 `bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` and
 `docs/PRODUCT_EVIDENCE.md`. OpenCode `1.18.4` was also verified in the current
-environment for local search/load and warm-cache reuse. This does not establish
-Claude Code compatibility or cross-platform OpenCode behavior.
+environment for local search/load and warm-cache reuse. Claude Code CLI
+`2.1.212` was verified for a live `search_skills`/`load_skill` round trip
+against a real local catalog (`bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`),
+but not for a Gate-6-equivalent token/routing comparison. This does not
+establish cross-platform Claude Code or OpenCode behavior, or Claude Code
+token/routing characteristics at catalog scale.
