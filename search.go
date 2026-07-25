@@ -166,16 +166,33 @@ func layerTagMatch(tokens []string, index []SkillEntry) []int {
 // Layer 3: Name matching
 // ---------------------------------------------------------------------------
 
+// layerNameMatch scores each entry by name relevance. The bonus is applied at
+// most once per entry: a hyphenated compound name (e.g. "docker-builder")
+// otherwise accumulates one partialNameMatchScore per query token that
+// happens to be a substring of a different name fragment, which inflates it
+// above single-token names like "api-guardian" even when the compound name
+// isn't the query's primary subject. Capping to the strongest single signal
+// (exact match, else any partial match) keeps a real name hit meaningful
+// without letting incidental multi-fragment overlap dominate the ranking.
 func layerNameMatch(tokens []string, index []SkillEntry) []int {
 	scores := make([]int, len(index))
 	for i, entry := range index {
 		nameLow := strings.ToLower(entry.Name)
+		exact, partial := false, false
 		for _, tok := range tokens {
 			if nameLow == tok {
-				scores[i] += exactNameMatchScore
-			} else if strings.Contains(nameLow, tok) {
-				scores[i] += partialNameMatchScore
+				exact = true
+				break
 			}
+			if strings.Contains(nameLow, tok) {
+				partial = true
+			}
+		}
+		switch {
+		case exact:
+			scores[i] = exactNameMatchScore
+		case partial:
+			scores[i] = partialNameMatchScore
 		}
 	}
 	return scores

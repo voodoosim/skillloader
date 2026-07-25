@@ -181,6 +181,39 @@ func TestSearchRejectsAmbiguousNames(t *testing.T) {
 	}
 }
 
+// TestSearchNameMatchCapsCompoundNameBonus locks in the Gate 6 finding
+// (bench/results/2026-07-25-claude-code-2.1.212-gate6-isolated/, task
+// security-gate-01): a query naming two distinct fragments of a hyphenated
+// compound name ("docker-builder") must not out-rank a skill whose single
+// name token is the query's actual primary subject ("api-guardian") purely
+// because the compound name accumulates two separate substring hits.
+func TestSearchNameMatchCapsCompoundNameBonus(t *testing.T) {
+	index := []SkillEntry{
+		{
+			Name:        "api-guardian",
+			Description: "Review OpenAPI contracts for API security defects.",
+			Tags:        []string{"api", "security", "openapi"},
+			Source:      "codex",
+			Path:        "/skills/api-guardian/SKILL.md",
+		},
+		{
+			Name:        "docker-builder",
+			Description: "Build reproducible Docker container images.",
+			Tags:        []string{"docker", "container", "build"},
+			Source:      "codex",
+			Path:        "/skills/docker-builder/SKILL.md",
+		},
+	}
+	engine := NewSearchEngine(index)
+	results := engine.Search("audit this api contract for security and build a docker image", 5)
+	if len(results) < 2 {
+		t.Fatalf("expected both skills to match, got %d: %#v", len(results), results)
+	}
+	if results[0].Name != "api-guardian" {
+		t.Errorf("top result = %q, want %q (compound-name bonus should not dominate)", results[0].Name, "api-guardian")
+	}
+}
+
 func TestSafetyFilterRejectsNameless(t *testing.T) {
 	entries := []scoredEntry{
 		{entry: SkillEntry{Name: "", Path: "/x", Source: "codex"}, score: 10},

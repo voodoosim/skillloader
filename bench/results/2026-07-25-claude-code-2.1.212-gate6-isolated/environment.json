@@ -1,0 +1,75 @@
+{
+  "binary_sha256": "78a0b8d422d335c8d6b88bdfd0db4be6f7c9faed245c653259598501d3b4edc5",
+  "build_source": {
+    "files": [
+      "bench_test.go",
+      "benchmark_evidence_test.go",
+      "cache.go",
+      "catalog.go",
+      "doctor.go",
+      "doctor_test.go",
+      "go.mod",
+      "go.sum",
+      "integration_test.go",
+      "loader.go",
+      "loader_test.go",
+      "main.go",
+      "main_test.go",
+      "mcp_test.go",
+      "parity_test.go",
+      "search.go",
+      "search_test.go",
+      "snapshot.go",
+      "snapshot_test.go",
+      "stdio_test.go"
+    ],
+    "git_clean": true,
+    "sha256": "5f7fce53b256818da10fef2e0dc6194ab27e1697f741e03d269fa7f91f9104ec"
+  },
+  "catalog_root": "testdata/parity/home/.codex/skills",
+  "catalog_sha256": "9a108fc61ae23247a119b8e4413011a583c9a9a1dd9bbf18ccc7c834bed802a1",
+  "catalog_size": 10,
+  "catalog_skill_names": [
+    "api-guardian",
+    "branch-surgeon",
+    "cache-observer",
+    "contract-auditor",
+    "docker-builder",
+    "incident-triage",
+    "korean-router",
+    "migration-planner",
+    "release-notes",
+    "test-designer"
+  ],
+  "claude_code_version": "2.1.212 (Claude Code)",
+  "generated_at": "2026-07-25T04:53:04.077963+00:00",
+  "git_branch": "main",
+  "git_commit": "1b6ad6c1b542d87d8c45d04100c2edcfd2433b82",
+  "go_version": "go version go1.26.5 linux/amd64",
+  "isolation": {
+    "bare_mode_rejected_reason": "--bare also skips keychain reads, breaking subscription auth",
+    "bare_mode_used": false,
+    "disable_slash_commands": true,
+    "setting_sources": "",
+    "strict_mcp_config": true,
+    "working_directory": "temporary directory outside repository"
+  },
+  "max_budget_usd_per_invocation": "1.00",
+  "model": "sonnet",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python_version": "3.12.3",
+  "run_order": "paired by task; eager first for even indexes, skillloader first for odd indexes",
+  "runner": {
+    "execution_sha256": "324e89065aa049343eb2b7e92d0316dad14078df2ebdbb4c2a8d203c74c9836e"
+  },
+  "schema_version": 1,
+  "static_token_estimates": {
+    "common_policy_cl100k": 119,
+    "eager_catalog_block_cl100k": 589,
+    "eager_system_prompt_cl100k": 732,
+    "method": "tiktoken cl100k_base (offline estimate; not Anthropic's tokenizer)",
+    "skillloader_system_prompt_cl100k": 170
+  },
+  "task_fixture": "bench/tasks/task-fixture-v1.json",
+  "task_fixture_sha256": "585adf9e3534ff35342accff36d2a1aeb71cb9474b342243ff1f4d29db9ea5bf"
+}

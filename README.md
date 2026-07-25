@@ -83,11 +83,12 @@ release assets are documented in [INSTALL.md](INSTALL.md).
 - Two model-visible MCP tools
 - Stable JSON output for direct CLI diagnostics
 
-Live Codex CLI `0.144.6` bootstrap is verified on the versioned 10-skill routing
-fixture in an isolated temporary Codex environment. OpenCode `1.18.4` has also
-completed a live local search/load and warm-cache check. Claude Code CLI
-`2.1.212` completed a live `search_skills`/`load_skill` round trip against a
-real local catalog, but not a Gate-6-equivalent token/routing comparison. See
+Live Codex CLI `0.144.6` and Claude Code CLI `2.1.212` both completed the same
+isolated 12-task, 10-skill Gate-6 routing fixture (`docs/BENCHMARK.md`).
+Neither shows a positive token or cost saving at this small catalog size; see
+the benchmark doc for the exact numbers and the Claude-Code-specific
+`ToolSearch` deferred-tool overhead. OpenCode `1.18.4` has also completed a
+live local search/load and warm-cache check. See
 [docs/CLIENT_BOOTSTRAP.md](docs/CLIENT_BOOTSTRAP.md) for registration and
 isolated verification commands.
 

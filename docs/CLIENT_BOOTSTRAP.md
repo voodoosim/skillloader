@@ -46,11 +46,17 @@ The `--mcp-config` option and `.mcp.json` shape are documented by Anthropic:
 A live round trip (`search_skills` then `load_skill` against a real, non-synthetic
 local catalog) was recorded on Claude Code CLI `2.1.212` via `claude mcp add`
 project-scoped registration; both calls returned valid, checksum-matching
-results. See
-`bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`. This confirms
-the stdio contract works live under Claude Code; it is not a Gate-6-equivalent
-eager-vs-SkillLoader token/routing comparison — see "Common verification"
-below for what remains unestablished.
+results. See `bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`.
+
+A separate, isolated Gate-6-equivalent eager-vs-SkillLoader comparison (same
+12-task, 10-skill fixture used against Codex) was also run on Claude Code CLI
+`2.1.212` and is recorded in
+`bench/results/2026-07-25-claude-code-2.1.212-gate6-isolated/`; see
+`docs/BENCHMARK.md` "Live Claude Code routing evidence" for the results and
+isolation method. It shows no positive token or cost saving at this small
+catalog size, plus a Claude-Code-specific `ToolSearch` deferred-tool-resolution
+overhead with no Codex analogue — see "Common verification" below for what
+still remains unestablished.
 
 ## Codex
 
@@ -109,12 +115,14 @@ Live model behavior is not established by these commands. A client-specific
 run must record the exact client version, configuration scope, selected skill,
 and complete loaded document before claiming live compatibility.
 
-The Codex CLI `0.144.6` live evidence meeting those requirements is recorded in
+The Codex CLI `0.144.6` and Claude Code CLI `2.1.212` live evidence meeting
+those requirements is recorded in
 `bench/results/2026-07-21-codex-0.144.6-gate6-isolated/` and
-`docs/PRODUCT_EVIDENCE.md`. OpenCode `1.18.4` was also verified in the current
-environment for local search/load and warm-cache reuse. Claude Code CLI
-`2.1.212` was verified for a live `search_skills`/`load_skill` round trip
-against a real local catalog (`bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`),
-but not for a Gate-6-equivalent token/routing comparison. This does not
-establish cross-platform Claude Code or OpenCode behavior, or Claude Code
-token/routing characteristics at catalog scale.
+`bench/results/2026-07-25-claude-code-2.1.212-gate6-isolated/`, documented in
+`docs/BENCHMARK.md` and `docs/PRODUCT_EVIDENCE.md`. OpenCode `1.18.4` was
+also verified in the current environment for local search/load and
+warm-cache reuse. This does not establish cross-platform Claude Code or
+OpenCode behavior beyond what is recorded, a real-catalog or large-catalog
+break-even point for either client, or that the two clients' token/cost
+totals are comparable to each other (their usage-accounting fields differ in
+shape).

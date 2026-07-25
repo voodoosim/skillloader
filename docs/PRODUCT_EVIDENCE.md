@@ -156,8 +156,22 @@ This evidence does not establish:
 - task-completion quality beyond routing and final-instruction extraction;
 - statistical stability beyond one run per task and mode;
 - a real-catalog or large-catalog break-even point;
-- Claude Code token/routing behavior at catalog scale (a live stdio round trip
-  is recorded in `bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/`,
-  but not a Gate-6-equivalent comparison), or cross-platform OpenCode behavior;
+- cross-platform OpenCode behavior beyond the warm-session check below;
 - provider-exact tokenization of the offline static layers;
 - release-artifact or clean-room installation compatibility.
+
+## Live Claude Code comparison
+
+A Gate-6-equivalent isolated comparison for Claude Code CLI `2.1.212` is
+recorded in `bench/results/2026-07-25-claude-code-2.1.212-gate6-isolated/`
+and documented in `docs/BENCHMARK.md` under "Live Claude Code routing
+evidence". It is the same 12-task fixture and 10-skill catalog as the Codex
+comparison above, run with `scripts/run_gate6_claude_code.py`, and shows the
+same direction (SkillLoader costs more at this small catalog size) plus a
+Claude-Code-specific `ToolSearch` deferred-tool-resolution overhead that has
+no Codex analogue. Anthropic's usage-accounting fields are not the same
+shape as Codex's; the two clients' totals are not directly comparable to
+each other, only to their own eager-mode run. The earlier
+`bench/results/2026-07-25-claude-code-2.1.212-live-roundtrip/` directory
+remains a plain stdio round-trip check, not a comparison, and is superseded
+for comparison purposes by the `-gate6-isolated` directory.
