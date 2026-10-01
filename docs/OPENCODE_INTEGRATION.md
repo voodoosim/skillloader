@@ -6,7 +6,7 @@ Add this entry to `~/.config/opencode/opencode.json` under the `mcp` key:
 {
   "skillloader": {
     "type": "local",
-    "command": ["/home/vodo/workspace/projects/skillloader/skillloader"],
+    "command": ["/home/vodo/workspace/tools/skillloader/skillloader"],
     "environment": {
       "SKILLLOADER_ROOTS": "/home/vodo/.codex/skills,/home/vodo/.claude/skills,/home/vodo/.agents/skills,/home/vodo/.codex/disabled-skills"
     },

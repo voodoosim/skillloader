@@ -1,7 +1,7 @@
 # Claude Code live round-trip evidence
 
 - Client: Claude Code CLI `2.1.212`
-- Registration: `claude mcp add skillloader -- /home/vodo/workspace/projects/skillloader/dist/skillloader`
+- Registration: `claude mcp add skillloader -- /home/vodo/workspace/tools/skillloader/dist/skillloader`
   (project-scoped stdio server, no `SKILLLOADER_ROOTS` override — default roots:
   `~/.codex/skills`, `~/.codex/disabled-skills`, `~/.agents/skills`, `~/.claude/skills`)
 - Catalog: the operator's real local skill directories (not a synthetic fixture)
